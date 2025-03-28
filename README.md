@@ -63,3 +63,6 @@ O dashboard espera um arquivo Excel com a seguinte estrutura:
 2. Instale as dependências:
    ```bash
    npm install
+3. Execute o projeto:
+     ```bash
+      npm run dev
