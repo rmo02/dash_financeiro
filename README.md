@@ -2,7 +2,7 @@
 
 ![Dashboard Financeiro](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dash_financeiro-mGRF2s3ADcy83qFWc8Qaq7pQcBnsHM.png)
 
-Um dashboard financeiro moderno e interativo para análise de dados financeiros empresariais, desenvolvido com React, Next.js e Tailwind CSS.
+Um dashboard financeiro moderno e interativo para análise de dados financeiros empresariais, desenvolvido com React, Vite e Tailwind CSS.
 
 ## 🚀 Funcionalidades
 
@@ -37,7 +37,7 @@ O dashboard oferece múltiplas visualizações para análise financeira completa
 ## 🛠️ Tecnologias Utilizadas
 
 - **React**: Biblioteca JavaScript para construção de interfaces
-- **Next.js**: Framework React para aplicações web
+- **Vite**: Framework React para aplicações web
 - **Tailwind CSS**: Framework CSS para design rápido e responsivo
 - **Recharts**: Biblioteca de gráficos para React
 - **shadcn/ui**: Componentes UI reutilizáveis e acessíveis
