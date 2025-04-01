@@ -19,23 +19,50 @@ type GroupColors = {
 
 interface GroupChartProps {
   data: any[]
-  selectedCompany: string
+  selectedCompanies: string[]
   selectedYear: string
+  selectedMonths: string[]
 }
 
-export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartProps) {
+export function GroupChart({ data, selectedCompanies, selectedYear, selectedMonths }: GroupChartProps) {
   const chartData = useMemo(() => {
-    // Filter data by selected company and year if any
+    // Filter data by selected companies and year if any
     let filteredData = [...data]
 
-    if (selectedCompany) {
-      filteredData = filteredData.filter((item) => item.CIA === selectedCompany)
+    // Filtrar por empresas selecionadas (múltiplas)
+    if (selectedCompanies.length > 0) {
+      filteredData = filteredData.filter((item) => selectedCompanies.includes(item.CIA))
     }
 
     if (selectedYear) {
       filteredData = filteredData.filter((item) => {
         const date = new Date(item.PERÍODO)
         return date.getUTCFullYear().toString() === selectedYear
+      })
+    }
+
+    // Filtrar por meses selecionados (múltiplos)
+    if (selectedMonths.length > 0) {
+      filteredData = filteredData.filter((item) => {
+        const date = new Date(item.PERÍODO)
+        // Usar os meses em português baseados no índice do mês UTC
+        const monthIndex = date.getUTCMonth()
+        const monthNames = [
+          "janeiro",
+          "fevereiro",
+          "março",
+          "abril",
+          "maio",
+          "junho",
+          "julho",
+          "agosto",
+          "setembro",
+          "outubro",
+          "novembro",
+          "dezembro",
+        ]
+        const itemMonth = monthNames[monthIndex].toLowerCase()
+        return selectedMonths.includes(itemMonth)
       })
     }
 
@@ -67,7 +94,7 @@ export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartPr
     return Object.values(groupData)
       .sort((a, b) => b.value - a.value)
       .filter((item) => item.value > 0) // Remover itens com valor zero
-  }, [data, selectedCompany, selectedYear])
+  }, [data, selectedCompanies, selectedYear, selectedMonths])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

@@ -1,36 +1,23 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ReferenceLine,
-  ResponsiveContainer,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 // Adicionar uma definição de tipo para as abreviações de mês no início do arquivo, logo após as importações
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
 interface RevenueChartProps {
   data: any[]
-  selectedCompany: string
+  selectedCompanies: string[]
   selectedYear: string
+  selectedMonths: string[]
 }
 
-export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueChartProps) {
+export function RevenueChart({ data, selectedCompanies, selectedYear, selectedMonths }: RevenueChartProps) {
   // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
-    // Filter data by selected company and year if any
+    // Filter data by selected year and months
     let filteredData = [...data]
-
-    if (selectedCompany) {
-      filteredData = filteredData.filter((item) => item.CIA === selectedCompany)
-    }
 
     if (selectedYear) {
       filteredData = filteredData.filter((item) => {
@@ -39,7 +26,37 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
       })
     }
 
-    // Create an object with all months initialized to zero
+    // Filtrar por meses selecionados (múltiplos)
+    if (selectedMonths.length > 0) {
+      filteredData = filteredData.filter((item) => {
+        const date = new Date(item.PERÍODO)
+        // Usar os meses em português baseados no índice do mês UTC
+        const monthIndex = date.getUTCMonth()
+        const monthNames = [
+          "janeiro",
+          "fevereiro",
+          "março",
+          "abril",
+          "maio",
+          "junho",
+          "julho",
+          "agosto",
+          "setembro",
+          "outubro",
+          "novembro",
+          "dezembro",
+        ]
+        const itemMonth = monthNames[monthIndex].toLowerCase()
+        return selectedMonths.includes(itemMonth)
+      })
+    }
+
+    // Se não houver empresas selecionadas, retornar dados vazios
+    if (selectedCompanies.length === 0) {
+      return []
+    }
+
+    // Create an object with all months initialized to zero for each company
     const monthsTemplate: Record<MonthAbbr, number> = {
       jan: 0,
       fev: 0,
@@ -55,12 +72,16 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
       dez: 0,
     }
 
-    const monthlyData = { ...monthsTemplate }
+    // Inicializar dados mensais para cada empresa
+    const companiesData: Record<string, Record<MonthAbbr, number>> = {}
+    selectedCompanies.forEach((company) => {
+      companiesData[company] = { ...monthsTemplate }
+    })
 
-    // Group by month and calculate gross revenue
+    // Group by month and calculate gross revenue for each company
     filteredData.forEach((item) => {
-      // Apenas receitas do grupo RECEITA
-      if (item.GRUPO === "RECEITA") {
+      // Apenas receitas do grupo RECEITA para empresas selecionadas
+      if (item.GRUPO === "RECEITA" && selectedCompanies.includes(item.CIA)) {
         const date = new Date(item.PERÍODO)
         // Usar o mês UTC para evitar problemas de fuso horário
         const monthIndex = date.getUTCMonth()
@@ -80,23 +101,28 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
         ]
         const monthAbbr = monthAbbrArray[monthIndex]
 
-        // Agora o TypeScript sabe que monthAbbr é uma chave válida
-        monthlyData[monthAbbr] += Number(item.VALOR)
+        // Adicionar ao valor da empresa específica
+        companiesData[item.CIA][monthAbbr] += Number(item.VALOR)
       }
     })
-
-    // Convert to array format for chart
-    const result = Object.entries(monthlyData).map(([month, revenue]) => ({
-      month,
-      revenue,
-    }))
 
     // Define month order for sorting
     const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-    // Sort by month order
-    return result.sort((a, b) => monthOrder.indexOf(a.month as MonthAbbr) - monthOrder.indexOf(b.month as MonthAbbr))
-  }, [data, selectedCompany, selectedYear])
+    // Convert to array format for chart
+    const result = monthOrder.map((month) => {
+      const monthData: any = { month }
+
+      // Adicionar dados de cada empresa
+      selectedCompanies.forEach((company) => {
+        monthData[company] = companiesData[company][month]
+      })
+
+      return monthData
+    })
+
+    return result
+  }, [data, selectedCompanies, selectedYear, selectedMonths])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -107,12 +133,50 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
     }).format(value)
   }
 
-  // Find the maximum revenue value for setting the domain
-  const maxRevenue = Math.max(...chartData.map((item: any) => item.revenue), 0)
+  // Encontrar o valor máximo considerando todas as empresas
+  const maxRevenue = useMemo(() => {
+    if (chartData.length === 0) return 0
 
-  // Calculate average revenue for reference line
-  const avgRevenue =
-    chartData.length > 0 ? chartData.reduce((sum: number, item: any) => sum + item.revenue, 0) / chartData.length : 0
+    let max = 0
+    chartData.forEach((item) => {
+      selectedCompanies.forEach((company) => {
+        if (item[company] > max) max = item[company]
+      })
+    })
+
+    return max
+  }, [chartData, selectedCompanies])
+
+  // Gerar cores diferentes para cada empresa
+  const companyColors = useMemo(() => {
+    const colors = [
+      "#4f46e5", // Azul (original)
+      "#ef4444", // Vermelho
+      "#10b981", // Verde
+      "#f59e0b", // Âmbar
+      "#8b5cf6", // Roxo
+      "#ec4899", // Rosa
+      "#06b6d4", // Ciano
+      "#84cc16", // Lima
+      "#f97316", // Laranja
+      "#6366f1", // Índigo
+    ]
+
+    const result: Record<string, string> = {}
+    selectedCompanies.forEach((company, index) => {
+      result[company] = colors[index % colors.length]
+    })
+
+    return result
+  }, [selectedCompanies])
+
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full h-[500px] flex items-center justify-center">
+        <p className="text-gray-500">Nenhum dado disponível para os filtros selecionados</p>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full h-[500px]">
@@ -135,7 +199,7 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
             axisLine={{ stroke: "#e0e0e0" }}
           />
           <Tooltip
-            formatter={(value: number) => [formatCurrency(value), "Receita Bruta"]}
+            formatter={(value: number, name: string) => [formatCurrency(value), name]}
             labelFormatter={(label) => `Período: ${label}`}
             contentStyle={{
               backgroundColor: "white",
@@ -144,19 +208,19 @@ export function RevenueChart({ data, selectedCompany, selectedYear }: RevenueCha
               padding: "10px",
             }}
           />
-          <Legend verticalAlign="top" height={36} formatter={() => "Receita Bruta"} />
-          <ReferenceLine
-            y={avgRevenue}
-            stroke="#3b82f6"
-            strokeDasharray="3 3"
-            label={{
-              value: "Média",
-              position: "insideBottomRight",
-              fill: "#3b82f6",
-              fontSize: 12,
-            }}
-          />
-          <Bar dataKey="revenue" fill="#3b82f6" name="Receita Bruta" radius={[4, 4, 0, 0]} barSize={40} />
+          <Legend />
+
+          {/* Renderizar uma barra para cada empresa */}
+          {selectedCompanies.map((company) => (
+            <Bar
+              key={company}
+              dataKey={company}
+              name={company}
+              fill={companyColors[company]}
+              radius={[4, 4, 0, 0]}
+              barSize={selectedCompanies.length > 1 ? 40 / selectedCompanies.length : 40}
+            />
+          ))}
         </BarChart>
       </ResponsiveContainer>
     </div>

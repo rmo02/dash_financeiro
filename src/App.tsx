@@ -14,8 +14,8 @@ function App() {
     years,
     groups,
     subgroups,
-    selectedCompany,
-    selectedMonth,
+    selectedCompanies,
+    selectedMonths,
     selectedYear,
     selectedGroup,
     selectedSubgroup,
@@ -23,13 +23,14 @@ function App() {
     isLoading,
     errorMessage,
     fileName,
-    setSelectedCompany,
-    setSelectedMonth,
+    setSelectedCompanies,
+    setSelectedMonths,
     setSelectedYear,
     setSelectedGroup,
     setSelectedSubgroup,
     handleFileUpload,
     resetFilters,
+    companyMetrics,
   } = useFinancialData()
 
   return (
@@ -81,26 +82,30 @@ function App() {
                 years={years}
                 groups={groups}
                 subgroups={subgroups}
-                selectedCompany={selectedCompany}
-                selectedMonth={selectedMonth}
+                selectedCompanies={selectedCompanies}
+                selectedMonths={selectedMonths}
                 selectedYear={selectedYear}
                 selectedGroup={selectedGroup}
                 selectedSubgroup={selectedSubgroup}
-                setSelectedCompany={setSelectedCompany}
-                setSelectedMonth={setSelectedMonth}
+                setSelectedCompanies={setSelectedCompanies}
+                setSelectedMonths={setSelectedMonths}
                 setSelectedYear={setSelectedYear}
                 setSelectedGroup={setSelectedGroup}
                 setSelectedSubgroup={setSelectedSubgroup}
                 resetFilters={resetFilters}
               />
 
-              <FinancialMetrics metrics={metrics} />
+              <FinancialMetrics
+                metrics={metrics}
+                selectedCompanies={selectedCompanies}
+                companyMetrics={companyMetrics}
+              />
 
               <DashboardTabs
                 data={data}
-                selectedCompany={selectedCompany}
+                selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
-                selectedMonth={selectedMonth}
+                selectedMonths={selectedMonths}
                 selectedGroup={selectedGroup}
                 selectedSubgroup={selectedSubgroup}
               />

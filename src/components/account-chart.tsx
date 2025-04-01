@@ -12,18 +12,18 @@ interface AccountData {
 
 interface AccountChartProps {
   data: any[]
-  selectedCompany: string
+  selectedCompanies: string[]
   selectedYear: string
-  selectedMonth: string
+  selectedMonths: string[]
   selectedGroup: string
   selectedSubgroup: string
 }
 
 export function AccountChart({
   data,
-  selectedCompany,
+  selectedCompanies,
   selectedYear,
-  selectedMonth,
+  selectedMonths,
   selectedGroup,
   selectedSubgroup,
 }: AccountChartProps) {
@@ -31,8 +31,9 @@ export function AccountChart({
     // Filter data by selected filters
     let filteredData = [...data]
 
-    if (selectedCompany) {
-      filteredData = filteredData.filter((item) => item.CIA === selectedCompany)
+    // Filtrar por empresas selecionadas (múltiplas)
+    if (selectedCompanies.length > 0) {
+      filteredData = filteredData.filter((item) => selectedCompanies.includes(item.CIA))
     }
 
     if (selectedYear) {
@@ -42,7 +43,8 @@ export function AccountChart({
       })
     }
 
-    if (selectedMonth && selectedMonth !== "all") {
+    // Filtrar por meses selecionados (múltiplos)
+    if (selectedMonths.length > 0) {
       filteredData = filteredData.filter((item) => {
         const date = new Date(item.PERÍODO)
         // Usar os meses em português baseados no índice do mês UTC
@@ -61,8 +63,8 @@ export function AccountChart({
           "novembro",
           "dezembro",
         ]
-        const itemMonth = monthNames[monthIndex]
-        return itemMonth === selectedMonth.toLowerCase()
+        const itemMonth = monthNames[monthIndex].toLowerCase()
+        return selectedMonths.includes(itemMonth)
       })
     }
 
@@ -105,7 +107,7 @@ export function AccountChart({
         name: item.name,
         value: item.originalValue,
       }))
-  }, [data, selectedCompany, selectedYear, selectedMonth, selectedGroup, selectedSubgroup])
+  }, [data, selectedCompanies, selectedYear, selectedMonths, selectedGroup, selectedSubgroup])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -131,6 +133,9 @@ export function AccountChart({
       </div>
     )
   }
+
+
+
 
   return (
     <div className="w-full h-[500px]">

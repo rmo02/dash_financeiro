@@ -6,6 +6,15 @@ import { useState, useEffect } from "react"
 import * as XLSX from "xlsx"
 import { parseExcelData, validateExcelData } from "../lib/excel-parser"
 
+interface CompanyMetrics {
+  grossRevenue: number
+  deductions: number
+  netRevenue: number
+  expenses: number
+  netResult: number
+  netMargin: number
+}
+
 export function useFinancialData() {
   const [data, setData] = useState<any[]>([])
   const [companies, setCompanies] = useState<string[]>([])
@@ -13,8 +22,11 @@ export function useFinancialData() {
   const [years, setYears] = useState<string[]>([])
   const [groups, setGroups] = useState<string[]>([])
   const [subgroups, setSubgroups] = useState<string[]>([])
-  const [selectedCompany, setSelectedCompany] = useState<string>("")
-  const [selectedMonth, setSelectedMonth] = useState<string>("all")
+
+  // Modificar para arrays para seleção múltipla
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([])
+
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedGroup, setSelectedGroup] = useState<string>("Todos")
   const [selectedSubgroup, setSelectedSubgroup] = useState<string>("Todos")
@@ -27,6 +39,7 @@ export function useFinancialData() {
     netResult: 0,
     netMargin: 0,
   })
+  const [companyMetrics, setCompanyMetrics] = useState<Record<string, CompanyMetrics>>({})
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [fileName, setFileName] = useState<string>("")
@@ -77,7 +90,7 @@ export function useFinancialData() {
         setSubgroups(uniqueSubgroups)
 
         if (uniqueCompanies.length > 0) {
-          setSelectedCompany(uniqueCompanies[0])
+          setSelectedCompanies([uniqueCompanies[0]]) // Iniciar com a primeira empresa selecionada
         }
 
         if (uniqueYears.length > 0) {
@@ -86,7 +99,7 @@ export function useFinancialData() {
 
         setSelectedGroup("Todos") // Default to "Todos"
         setSelectedSubgroup("Todos") // Default to "Todos"
-        setSelectedMonth("all") // Default to "Todos os meses"
+        setSelectedMonths([]) // Iniciar com nenhum mês selecionado (todos)
 
         setIsLoading(false)
       } catch (error) {
@@ -103,11 +116,13 @@ export function useFinancialData() {
     if (data.length > 0) {
       let filtered = [...data]
 
-      if (selectedCompany) {
-        filtered = filtered.filter((item) => item.CIA === selectedCompany)
+      // Filtrar por empresas selecionadas (múltiplas)
+      if (selectedCompanies.length > 0) {
+        filtered = filtered.filter((item) => selectedCompanies.includes(item.CIA))
       }
 
-      if (selectedMonth && selectedMonth !== "all") {
+      // Filtrar por meses selecionados (múltiplos)
+      if (selectedMonths.length > 0) {
         filtered = filtered.filter((item) => {
           const date = new Date(item.PERÍODO)
           // Usar os meses em português baseados no índice do mês UTC
@@ -126,8 +141,8 @@ export function useFinancialData() {
             "novembro",
             "dezembro",
           ]
-          const itemMonth = monthNames[monthIndex]
-          return itemMonth === selectedMonth.toLowerCase()
+          const itemMonth = monthNames[monthIndex].toLowerCase()
+          return selectedMonths.includes(itemMonth)
         })
       }
 
@@ -148,6 +163,7 @@ export function useFinancialData() {
 
       setFilteredData(filtered)
 
+      // Calcular métricas consolidadas
       // Receita bruta (GRUPO = RECEITA)
       const grossRevenue = filtered
         .filter((item) => item.GRUPO === "RECEITA")
@@ -180,13 +196,60 @@ export function useFinancialData() {
         netResult,
         netMargin,
       })
+
+      // Calcular métricas por empresa quando há múltiplas empresas selecionadas
+      if (selectedCompanies.length > 1) {
+        const newCompanyMetrics: Record<string, CompanyMetrics> = {}
+
+        selectedCompanies.forEach((company) => {
+          // Filtrar dados apenas para esta empresa
+          const companyData = filtered.filter((item) => item.CIA === company)
+
+          // Receita bruta (GRUPO = RECEITA)
+          const companyGrossRevenue = companyData
+            .filter((item) => item.GRUPO === "RECEITA")
+            .reduce((sum, item) => sum + Number(item.VALOR), 0)
+
+          // Deduções (GRUPO = DEDUCOES DE VENDAS)
+          const companyDeductions = companyData
+            .filter((item) => item.GRUPO === "DEDUCOES DE VENDAS")
+            .reduce((sum, item) => sum + Number(item.VALOR), 0) // Já são valores negativos
+
+          // Receita líquida = Receita bruta + Deduções (deduções já são negativas)
+          const companyNetRevenue = companyGrossRevenue + companyDeductions
+
+          // Despesas (GRUPO = DESPESA)
+          const companyExpenses = companyData
+            .filter((item) => item.GRUPO === "DESPESA")
+            .reduce((sum, item) => sum + Math.abs(Number(item.VALOR)), 0) // Usar valor absoluto
+
+          // Resultado líquido = Receita líquida - Despesas
+          const companyNetResult = companyNetRevenue - companyExpenses
+
+          // Margem líquida = (Resultado líquido / Receita líquida) * 100
+          const companyNetMargin = companyNetRevenue > 0 ? (companyNetResult / companyNetRevenue) * 100 : 0
+
+          newCompanyMetrics[company] = {
+            grossRevenue: companyGrossRevenue,
+            deductions: Math.abs(companyDeductions), // Valor absoluto para exibição
+            netRevenue: companyNetRevenue,
+            expenses: companyExpenses,
+            netResult: companyNetResult,
+            netMargin: companyNetMargin,
+          }
+        })
+
+        setCompanyMetrics(newCompanyMetrics)
+      } else {
+        setCompanyMetrics({})
+      }
     }
-  }, [data, selectedCompany, selectedMonth, selectedYear, selectedGroup, selectedSubgroup])
+  }, [data, selectedCompanies, selectedMonths, selectedYear, selectedGroup, selectedSubgroup])
 
   const resetFilters = () => {
-    if (companies.length > 0) setSelectedCompany(companies[0])
+    if (companies.length > 0) setSelectedCompanies([companies[0]])
     if (years.length > 0) setSelectedYear(years[years.length - 1])
-    setSelectedMonth("all")
+    setSelectedMonths([])
     setSelectedGroup("Todos")
     setSelectedSubgroup("Todos")
   }
@@ -207,18 +270,19 @@ export function useFinancialData() {
     years,
     groups,
     subgroups: filteredSubgroups,
-    selectedCompany,
-    selectedMonth,
+    selectedCompanies,
+    selectedMonths,
     selectedYear,
     selectedGroup,
     selectedSubgroup,
     filteredData,
     metrics,
+    companyMetrics,
     isLoading,
     errorMessage,
     fileName,
-    setSelectedCompany,
-    setSelectedMonth,
+    setSelectedCompanies,
+    setSelectedMonths,
     setSelectedYear,
     setSelectedGroup,
     setSelectedSubgroup,

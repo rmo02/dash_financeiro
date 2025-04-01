@@ -20,21 +20,38 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 
 interface DashboardTabsProps {
   data: any[]
-  selectedCompany: string
+  selectedCompanies: string[]
   selectedYear: string
-  selectedMonth: string
+  selectedMonths: string[]
   selectedGroup: string
   selectedSubgroup: string
 }
 
 export function DashboardTabs({
   data,
-  selectedCompany,
+  selectedCompanies,
   selectedYear,
-  selectedMonth,
+  selectedMonths,
   selectedGroup,
   selectedSubgroup,
 }: DashboardTabsProps) {
+  // Função para formatar a lista de empresas selecionadas
+  const formatCompanies = () => {
+    if (selectedCompanies.length === 0) return "todas as empresas"
+    if (selectedCompanies.length === 1) return selectedCompanies[0]
+    return `${selectedCompanies.length} empresas selecionadas`
+  }
+
+  // Função para formatar a lista de meses selecionados
+  const formatMonths = () => {
+    if (selectedMonths.length === 0) return "todos os meses"
+    if (selectedMonths.length === 1) {
+      const month = selectedMonths[0]
+      return month.charAt(0).toUpperCase() + month.slice(1)
+    }
+    return `${selectedMonths.length} meses selecionados`
+  }
+
   return (
     <TooltipProvider>
       <Tabs defaultValue="revenue" className="w-full">
@@ -114,7 +131,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-blue-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#DBEAFE] shadow-md">
                           <p>
                             Exibe a receita bruta mensal, calculada a partir da soma de todos os valores do grupo
                             RECEITA para cada mês.
@@ -123,15 +140,20 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Receita bruta por mês para {selectedCompany || "todas as empresas"} em{" "}
-                      {selectedYear || "todos os anos"}
+                      Receita bruta por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (
+                      {formatMonths()})
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <RevenueChart data={data} selectedCompany={selectedCompany} selectedYear={selectedYear} />
+              <RevenueChart
+                data={data}
+                selectedCompanies={selectedCompanies}
+                selectedYear={selectedYear}
+                selectedMonths={selectedMonths}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -153,7 +175,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-amber-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#FEF3C6] shadow-md">
                           <p>
                             Exibe as deduções mensais, calculadas a partir da soma do valor absoluto de todos os valores
                             do grupo DEDUCOES DE VENDAS para cada mês.
@@ -162,15 +184,19 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Deduções por mês para {selectedCompany || "todas as empresas"} em{" "}
-                      {selectedYear || "todos os anos"}
+                      Deduções por mês para {formatCompanies()} em {selectedYear || "todos os anos"} ({formatMonths()})
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <DeductionsChart data={data} selectedCompany={selectedCompany} selectedYear={selectedYear} />
+              <DeductionsChart
+                data={data}
+                selectedCompanies={selectedCompanies}
+                selectedYear={selectedYear}
+                selectedMonths={selectedMonths}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -192,7 +218,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-red-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#FFE2E2] shadow-md">
                           <p>
                             Exibe as despesas mensais, calculadas a partir da soma do valor absoluto de todos os valores
                             do grupo DESPESA para cada mês.
@@ -201,15 +227,19 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Despesas por mês para {selectedCompany || "todas as empresas"} em{" "}
-                      {selectedYear || "todos os anos"}
+                      Despesas por mês para {formatCompanies()} em {selectedYear || "todos os anos"} ({formatMonths()})
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <ExpensesChart data={data} selectedCompany={selectedCompany} selectedYear={selectedYear} />
+              <ExpensesChart
+                data={data}
+                selectedCompanies={selectedCompanies}
+                selectedYear={selectedYear}
+                selectedMonths={selectedMonths}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -231,7 +261,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-emerald-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#D0FAE5] shadow-md">
                           <p>
                             Exibe o resultado líquido mensal, calculado como Receita + Deduções + Despesas para cada
                             mês. Valores positivos representam lucro e negativos representam prejuízo.
@@ -240,15 +270,20 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Resultado líquido por mês para {selectedCompany || "todas as empresas"} em{" "}
-                      {selectedYear || "todos os anos"}
+                      Resultado líquido por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (
+                      {formatMonths()})
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <ResultChart data={data} selectedCompany={selectedCompany} selectedYear={selectedYear} />
+              <ResultChart
+                data={data}
+                selectedCompanies={selectedCompanies}
+                selectedYear={selectedYear}
+                selectedMonths={selectedMonths}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -270,7 +305,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-purple-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#F3E8FF] shadow-md">
                           <p>
                             Exibe a distribuição percentual dos valores por grupo (RECEITA, DEDUCOES DE VENDAS,
                             DESPESA), usando o valor absoluto para facilitar a comparação.
@@ -279,15 +314,20 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Distribuição de valores por grupo para {selectedCompany || "todas as empresas"} em{" "}
-                      {selectedYear || "todos os anos"}
+                      Distribuição de valores por grupo para {formatCompanies()} em {selectedYear || "todos os anos"} (
+                      {formatMonths()})
                     </CardDescription>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <GroupChart data={data} selectedCompany={selectedCompany} selectedYear={selectedYear} />
+              <GroupChart
+                data={data}
+                selectedCompanies={selectedCompanies}
+                selectedYear={selectedYear}
+                selectedMonths={selectedMonths}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -309,7 +349,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-violet-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#F3E8FF] shadow-md">
                           <p>
                             Exibe a distribuição percentual dos valores por subgrupo, usando o valor absoluto para
                             facilitar a comparação. Filtrável por grupo específico.
@@ -328,9 +368,10 @@ export function DashboardTabs({
             <CardContent className="p-6">
               <SubgroupChart
                 data={data}
-                selectedCompany={selectedCompany}
+                selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
                 selectedGroup={selectedGroup}
+                selectedMonths={selectedMonths}
               />
             </CardContent>
           </Card>
@@ -353,7 +394,7 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-amber-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-white text-gray-950 shadow-xl p-2 font-medium">
+                        <TooltipContent className="max-w-xs bg-[#FEF3C6] shadow-md">
                           <p>
                             Exibe as 10 principais contas por valor absoluto, mostrando o código e nome da conta. As
                             cores indicam se o valor é positivo (receita) ou negativo (despesa/dedução).
@@ -373,16 +414,15 @@ export function DashboardTabs({
             <CardContent className="p-6">
               <AccountChart
                 data={data}
-                selectedCompany={selectedCompany}
+                selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
-                selectedMonth={selectedMonth}
+                selectedMonths={selectedMonths}
                 selectedGroup={selectedGroup}
                 selectedSubgroup={selectedSubgroup}
               />
             </CardContent>
           </Card>
         </TabsContent>
-        
       </Tabs>
     </TooltipProvider>
   )

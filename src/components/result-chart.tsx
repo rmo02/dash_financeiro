@@ -3,33 +3,30 @@
 import { useMemo } from "react"
 import {
   Bar,
-  BarChart,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   Legend,
   ReferenceLine,
-  Cell,
   ResponsiveContainer,
+  Line,
+  ComposedChart,
 } from "recharts"
 
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
 interface ResultChartProps {
   data: any[]
-  selectedCompany: string
+  selectedCompanies: string[]
   selectedYear: string
+  selectedMonths: string[]
 }
 
-export function ResultChart({ data, selectedCompany, selectedYear }: ResultChartProps) {
+export function ResultChart({ data, selectedCompanies, selectedYear, selectedMonths }: ResultChartProps) {
   const chartData = useMemo(() => {
-    // Filter data by selected company and year if any
+    // Filter data by selected year and months
     let filteredData = [...data]
-
-    if (selectedCompany) {
-      filteredData = filteredData.filter((item) => item.CIA === selectedCompany)
-    }
 
     if (selectedYear) {
       filteredData = filteredData.filter((item) => {
@@ -38,7 +35,37 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
       })
     }
 
-    // Create an object with all months initialized to zero
+    // Filtrar por meses selecionados (múltiplos)
+    if (selectedMonths.length > 0) {
+      filteredData = filteredData.filter((item) => {
+        const date = new Date(item.PERÍODO)
+        // Usar os meses em português baseados no índice do mês UTC
+        const monthIndex = date.getUTCMonth()
+        const monthNames = [
+          "janeiro",
+          "fevereiro",
+          "março",
+          "abril",
+          "maio",
+          "junho",
+          "julho",
+          "agosto",
+          "setembro",
+          "outubro",
+          "novembro",
+          "dezembro",
+        ]
+        const itemMonth = monthNames[monthIndex].toLowerCase()
+        return selectedMonths.includes(itemMonth)
+      })
+    }
+
+    // Se não houver empresas selecionadas, retornar dados vazios
+    if (selectedCompanies.length === 0) {
+      return []
+    }
+
+    // Create an object with all months initialized to zero for each company
     const monthsTemplate: Record<MonthAbbr, { revenue: number; deductions: number; expenses: number }> = {
       jan: { revenue: 0, deductions: 0, expenses: 0 },
       fev: { revenue: 0, deductions: 0, expenses: 0 },
@@ -54,10 +81,19 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
       dez: { revenue: 0, deductions: 0, expenses: 0 },
     }
 
-    const monthlyData = { ...monthsTemplate }
+    // Inicializar dados mensais para cada empresa
+    const companiesData: Record<
+      string,
+      Record<MonthAbbr, { revenue: number; deductions: number; expenses: number }>
+    > = {}
+    selectedCompanies.forEach((company) => {
+      companiesData[company] = JSON.parse(JSON.stringify(monthsTemplate))
+    })
 
-    // Group by month and calculate revenue, deductions and expenses
+    // Group by month and calculate revenue, deductions and expenses for each company
     filteredData.forEach((item) => {
+      if (!selectedCompanies.includes(item.CIA)) return
+
       const date = new Date(item.PERÍODO)
       // Usar o mês UTC para evitar problemas de fuso horário
       const monthIndex = date.getUTCMonth()
@@ -78,26 +114,33 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
       const monthAbbr = monthAbbrArray[monthIndex]
 
       if (item.GRUPO === "RECEITA") {
-        monthlyData[monthAbbr].revenue += Number(item.VALOR)
+        companiesData[item.CIA][monthAbbr].revenue += Number(item.VALOR)
       } else if (item.GRUPO === "DEDUCOES DE VENDAS") {
-        monthlyData[monthAbbr].deductions += Number(item.VALOR) // Já é negativo
+        companiesData[item.CIA][monthAbbr].deductions += Number(item.VALOR) // Já é negativo
       } else if (item.GRUPO === "DESPESA") {
-        monthlyData[monthAbbr].expenses += Number(item.VALOR) // Já é negativo
+        companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR) // Já é negativo
       }
     })
-
-    // Calculate result and convert to array format for chart
-    const result = Object.entries(monthlyData).map(([month, values]) => ({
-      month,
-      result: values.revenue + values.deductions + values.expenses, // Todos os valores já com sinais corretos
-    }))
 
     // Define month order for sorting
     const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-    // Sort by month order
-    return result.sort((a, b) => monthOrder.indexOf(a.month as MonthAbbr) - monthOrder.indexOf(b.month as MonthAbbr))
-  }, [data, selectedCompany, selectedYear])
+    // Convert to array format for chart
+    const result = monthOrder.map((month) => {
+      const monthData: any = { month }
+
+      // Adicionar dados de cada empresa
+      selectedCompanies.forEach((company) => {
+        const companyData = companiesData[company][month]
+        // Calcular o resultado líquido para cada empresa
+        monthData[company] = companyData.revenue + companyData.deductions + companyData.expenses
+      })
+
+      return monthData
+    })
+
+    return result
+  }, [data, selectedCompanies, selectedYear, selectedMonths])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -108,19 +151,58 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
     }).format(value)
   }
 
-  // Find the min and max result values for setting the domain
-  const resultValues = chartData.map((item: any) => item.result)
-  const minResult = Math.min(...resultValues, 0)
-  const maxResult = Math.max(...resultValues, 0)
+  // Encontrar os valores mínimo e máximo considerando todas as empresas
+  const { minResult, maxResult } = useMemo(() => {
+    if (chartData.length === 0) return { minResult: 0, maxResult: 0 }
 
-  // Calculate average result for reference line
-  const avgResult =
-    chartData.length > 0 ? chartData.reduce((sum: number, item: any) => sum + item.result, 0) / chartData.length : 0
+    let min = 0
+    let max = 0
+
+    chartData.forEach((item) => {
+      selectedCompanies.forEach((company) => {
+        if (item[company] < min) min = item[company]
+        if (item[company] > max) max = item[company]
+      })
+    })
+
+    return { minResult: min, maxResult: max }
+  }, [chartData, selectedCompanies])
+
+  // Gerar cores diferentes para cada empresa
+  const companyColors = useMemo(() => {
+    const colors = [
+      "#10b981", // Verde (original)
+      "#4f46e5", // Azul
+      "#ef4444", // Vermelho
+      "#f59e0b", // Âmbar
+      "#8b5cf6", // Roxo
+      "#ec4899", // Rosa
+      "#06b6d4", // Ciano
+      "#84cc16", // Lima
+      "#f97316", // Laranja
+      "#6366f1", // Índigo
+    ]
+
+    const result: Record<string, string> = {}
+    selectedCompanies.forEach((company, index) => {
+      result[company] = colors[index % colors.length]
+    })
+
+    return result
+  }, [selectedCompanies])
+
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full h-[500px] flex items-center justify-center">
+        <p className="text-gray-500">Nenhum dado disponível para os filtros selecionados</p>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full h-[500px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+        <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
           <XAxis
             dataKey="month"
@@ -138,7 +220,7 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
             axisLine={{ stroke: "#e0e0e0" }}
           />
           <Tooltip
-            formatter={(value: number) => [formatCurrency(value), "Resultado Líquido"]}
+            formatter={(value: number, name: string) => [formatCurrency(value), name]}
             labelFormatter={(label) => `Período: ${label}`}
             contentStyle={{
               backgroundColor: "white",
@@ -147,25 +229,36 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
               padding: "10px",
             }}
           />
-          <Legend verticalAlign="top" height={36} formatter={() => "Resultado Líquido"} />
+          <Legend />
           <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
-          <ReferenceLine
-            y={avgResult}
-            stroke="#10b981"
-            strokeDasharray="3 3"
-            label={{
-              value: "Média",
-              position: "insideBottomRight",
-              fill: "#10b981",
-              fontSize: 12,
-            }}
-          />
-          <Bar dataKey="result" name="Resultado Líquido" radius={[4, 4, 0, 0]} barSize={40}>
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.result >= 0 ? "#10b981" : "#ef4444"} />
-            ))}
-          </Bar>
-        </BarChart>
+
+          {/* Renderizar uma barra ou linha para cada empresa */}
+          {selectedCompanies.map((company) =>
+            selectedCompanies.length > 3 ? (
+              // Usar linhas quando há muitas empresas para melhor visualização
+              <Line
+                key={company}
+                type="monotone"
+                dataKey={company}
+                name={company}
+                stroke={companyColors[company]}
+                strokeWidth={2}
+                dot={{ r: 4, fill: companyColors[company] }}
+                activeDot={{ r: 6 }}
+              />
+            ) : (
+              // Usar barras quando há poucas empresas
+              <Bar
+                key={company}
+                dataKey={company}
+                name={company}
+                fill={companyColors[company]}
+                radius={[4, 4, 0, 0]}
+                barSize={selectedCompanies.length > 1 ? 40 / selectedCompanies.length : 40}
+              />
+            ),
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   )
