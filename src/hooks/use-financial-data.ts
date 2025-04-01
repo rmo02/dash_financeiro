@@ -31,6 +31,7 @@ export function useFinancialData() {
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [fileName, setFileName] = useState<string>("")
 
+  // Atualizar a função handleFileUpload para lidar com a nova aba do Excel
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -45,17 +46,19 @@ export function useFinancialData() {
         const binaryString = event.target?.result
         const workbook = XLSX.read(binaryString, { type: "binary" })
 
-        // Check if the "VENDAS DO PERIODO" sheet exists
-        if (!workbook.SheetNames.includes("VENDAS DO PERIODO")) {
-          setErrorMessage("A planilha 'VENDAS DO PERIODO' não foi encontrada no arquivo Excel.")
+        // Verificar se existe alguma planilha no arquivo
+        if (workbook.SheetNames.length === 0) {
+          setErrorMessage("O arquivo Excel não contém planilhas.")
           setIsLoading(false)
           return
         }
 
-        const worksheet = workbook.Sheets["VENDAS DO PERIODO"]
+        // Usar a primeira planilha disponível (agora é "RESUMO.2024")
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
         const parsedData = XLSX.utils.sheet_to_json(worksheet)
 
-        // Validate the data structure
+        // Validar a estrutura dos dados
         const validation = validateExcelData(parsedData)
         if (!validation.isValid) {
           setErrorMessage(validation.message)

@@ -47,14 +47,14 @@ O dashboard oferece múltiplas visualizações para análise financeira completa
 
 O dashboard espera um arquivo Excel com a seguinte estrutura:
 
-- **Planilha**: "VENDAS DO PERIODO"
+- **Planilha**: Qualquer aba (por exemplo, "RESUMO.2024")
 - **Colunas obrigatórias**:
-  - `CIA`: Nome da empresa/companhia
-  - `PERÍODO`: Data no formato DD/MM/YYYY
-  - `GRUPO`: Categoria principal (ex: RECEITA, DEDUCOES DE VENDAS, DESPESA)
+  - `EMPRESA`: Nome da empresa/companhia
+  - `PERIODO`: Data no formato DD/MM/YYYY
+  - `CONTA`: Código da conta contábil
+  - `GRUPO`: Categoria principal (ex: RECEITA, DESPESA)
   - `SUBGRUPO`: Subcategoria dentro do grupo
   - `NOME CONTA`: Nome da conta contábil
-  - `CÓD. CONTA`: Código da conta (opcional)
   - `VALOR`: Valor monetário (pode conter valores negativos)
 
 ## 🚀 Como Usar

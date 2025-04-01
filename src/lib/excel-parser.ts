@@ -1,9 +1,20 @@
 // Modificar a função parseExcelData para corrigir o problema com as datas
 export function parseExcelData(rawData: any[]) {
+  // Normalizar nomes de colunas para lidar com espaços extras
+  const normalizedData = rawData.map((row) => {
+    const newRow: any = {}
+    Object.keys(row).forEach((key) => {
+      // Remover espaços extras e normalizar o nome da coluna
+      const normalizedKey = key.trim()
+      newRow[normalizedKey] = row[key]
+    })
+    return newRow
+  })
+
   // Process the data
-  const processedData = rawData.map((row) => {
+  const processedData = normalizedData.map((row) => {
     // Convert date string to Date object if needed
-    let periodo = row.PERÍODO
+    let periodo = row["PERIODO"]
     if (typeof periodo === "string") {
       // Handle DD/MM/YYYY format explicitly
       const parts = periodo.split("/")
@@ -25,14 +36,19 @@ export function parseExcelData(rawData: any[]) {
     }
 
     // Converter valores com vírgula para números
-    let valor = row.VALOR
+    let valor = row["VALOR"]
     if (typeof valor === "string") {
       valor = Number.parseFloat(valor.replace(/\./g, "").replace(/,/g, "."))
     }
 
+    // Mapear os novos nomes de colunas para os nomes esperados pelo sistema
     return {
-      ...row,
+      CIA: row["EMPRESA"],
       PERÍODO: periodo,
+      "CÓD. CONTA": row["CONTA"],
+      GRUPO: row["GRUPO"],
+      SUBGRUPO: row["SUBGRUPO"],
+      "NOME CONTA": row["NOME CONTA"],
       VALOR: valor,
     }
   })
@@ -82,7 +98,7 @@ export function parseExcelData(rawData: any[]) {
   }
 }
 
-// Add a function to validate the data structure
+// Modificar a função validateExcelData para lidar com os novos nomes de colunas e possíveis espaços
 export function validateExcelData(data: any[]) {
   if (data.length === 0) {
     return {
@@ -91,11 +107,18 @@ export function validateExcelData(data: any[]) {
     }
   }
 
-  // Check if the required columns exist
-  const requiredColumns = ["CIA", "PERÍODO", "GRUPO", "SUBGRUPO", "NOME CONTA", "VALOR"]
+  // Verificar as colunas do primeiro objeto
   const firstRow = data[0]
+  const availableColumns = Object.keys(firstRow).map((col) => col.trim())
 
-  const missingColumns = requiredColumns.filter((col) => !(col in firstRow))
+  // Novas colunas obrigatórias baseadas na nova estrutura
+  const requiredColumns = ["EMPRESA", "PERIODO", "CONTA", "GRUPO", "SUBGRUPO", "NOME CONTA", "VALOR"]
+
+  // Verificar se cada coluna obrigatória existe (considerando possíveis espaços extras)
+  const missingColumns = requiredColumns.filter((col) => {
+    // Procurar a coluna ignorando espaços extras
+    return !availableColumns.some((availCol) => availCol.replace(/\s+/g, "") === col.replace(/\s+/g, ""))
+  })
 
   if (missingColumns.length > 0) {
     return {
