@@ -3,6 +3,20 @@
 import { useMemo } from "react"
 import { Pie, PieChart, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
+// Definir tipos para os grupos financeiros
+type FinancialGroup = "RECEITA" | "DEDUCOES DE VENDAS" | "DESPESA"
+
+// Definir tipo para os dados do gráfico
+interface ChartDataItem {
+  name: string
+  value: number
+}
+
+// Definir tipo para as cores dos grupos
+type GroupColors = {
+  [key in FinancialGroup]: string
+}
+
 interface GroupChartProps {
   data: any[]
   selectedCompany: string
@@ -26,30 +40,33 @@ export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartPr
     }
 
     // Agrupar por GRUPO
-    const groupData = filteredData.reduce((acc: any, item: any) => {
-      const grupo = item.GRUPO
+    const groupData: Record<string, ChartDataItem> = filteredData.reduce(
+      (acc: Record<string, ChartDataItem>, item: any) => {
+        const grupo = item.GRUPO
 
-      if (!acc[grupo]) {
-        acc[grupo] = {
-          name: grupo,
-          value: 0,
+        if (!acc[grupo]) {
+          acc[grupo] = {
+            name: grupo,
+            value: 0,
+          }
         }
-      }
 
-      // Para valores negativos, usamos valor absoluto
-      if (Number(item.VALOR) < 0) {
-        acc[grupo].value += Math.abs(Number(item.VALOR))
-      } else {
-        acc[grupo].value += Number(item.VALOR)
-      }
+        // Para valores negativos, usamos valor absoluto
+        if (Number(item.VALOR) < 0) {
+          acc[grupo].value += Math.abs(Number(item.VALOR))
+        } else {
+          acc[grupo].value += Number(item.VALOR)
+        }
 
-      return acc
-    }, {})
+        return acc
+      },
+      {},
+    )
 
     // Convert to array and sort by value
     return Object.values(groupData)
-      .sort((a: any, b: any) => b.value - a.value)
-      .filter((item: any) => item.value > 0) // Remover itens com valor zero
+      .sort((a, b) => b.value - a.value)
+      .filter((item) => item.value > 0) // Remover itens com valor zero
   }, [data, selectedCompany, selectedYear])
 
   const formatCurrency = (value: number) => {
@@ -61,17 +78,20 @@ export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartPr
     }).format(value)
   }
 
-  const COLORS = {
+  // Definir cores para cada grupo com tipagem adequada
+  const COLORS: GroupColors = {
     RECEITA: "#4f46e5",
     "DEDUCOES DE VENDAS": "#f59e0b",
     DESPESA: "#ef4444",
   }
 
-  const getColor = (name: string) => {
-    return COLORS[name as keyof typeof COLORS] || "#8b5cf6"
+  // Função para obter a cor com base no nome do grupo
+  const getColor = (name: string): string => {
+    // Verificar se o nome é uma chave válida do objeto COLORS
+    return name in COLORS ? COLORS[name as FinancialGroup] : "#8b5cf6"
   }
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -92,7 +112,20 @@ export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartPr
     )
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  // Definir tipo para o objeto de payload do tooltip
+  interface TooltipPayload {
+    name: string
+    value: number
+    payload?: any
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: TooltipPayload[]
+    label?: string
+  }
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border rounded-md shadow-md">
@@ -135,7 +168,7 @@ export function GroupChart({ data, selectedCompany, selectedYear }: GroupChartPr
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            formatter={(value, entry, index) => <span className="text-sm font-medium">{value}</span>}
+            formatter={(value) => <span className="text-sm font-medium">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>

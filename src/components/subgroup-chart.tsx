@@ -3,6 +3,12 @@
 import { useMemo } from "react"
 import { Pie, PieChart, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
+// Definir tipo para os dados do gráfico
+interface ChartDataItem {
+  name: string
+  value: number
+}
+
 interface SubgroupChartProps {
   data: any[]
   selectedCompany: string
@@ -31,30 +37,33 @@ export function SubgroupChart({ data, selectedCompany, selectedYear, selectedGro
     }
 
     // Agrupar por SUBGRUPO
-    const subgroupData = filteredData.reduce((acc: any, item: any) => {
-      const subgrupo = item.SUBGRUPO
+    const subgroupData: Record<string, ChartDataItem> = filteredData.reduce(
+      (acc: Record<string, ChartDataItem>, item: any) => {
+        const subgrupo = item.SUBGRUPO
 
-      if (!acc[subgrupo]) {
-        acc[subgrupo] = {
-          name: subgrupo,
-          value: 0,
+        if (!acc[subgrupo]) {
+          acc[subgrupo] = {
+            name: subgrupo,
+            value: 0,
+          }
         }
-      }
 
-      // Para valores negativos, usamos valor absoluto
-      if (Number(item.VALOR) < 0) {
-        acc[subgrupo].value += Math.abs(Number(item.VALOR))
-      } else {
-        acc[subgrupo].value += Number(item.VALOR)
-      }
+        // Para valores negativos, usamos valor absoluto
+        if (Number(item.VALOR) < 0) {
+          acc[subgrupo].value += Math.abs(Number(item.VALOR))
+        } else {
+          acc[subgrupo].value += Number(item.VALOR)
+        }
 
-      return acc
-    }, {})
+        return acc
+      },
+      {},
+    )
 
     // Convert to array and sort by value
     return Object.values(subgroupData)
-      .sort((a: any, b: any) => b.value - a.value)
-      .filter((item: any) => item.value > 0) // Remover itens com valor zero
+      .sort((a, b) => b.value - a.value)
+      .filter((item) => item.value > 0) // Remover itens com valor zero
   }, [data, selectedCompany, selectedYear, selectedGroup])
 
   const formatCurrency = (value: number) => {
@@ -66,7 +75,8 @@ export function SubgroupChart({ data, selectedCompany, selectedYear, selectedGro
     }).format(value)
   }
 
-  const COLORS = [
+  // Definir cores para o gráfico
+  const COLORS: string[] = [
     "#4f46e5",
     "#ef4444",
     "#f59e0b",
@@ -79,7 +89,25 @@ export function SubgroupChart({ data, selectedCompany, selectedYear, selectedGro
     "#6366f1",
   ]
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+  // Definir tipos para os parâmetros da função renderCustomizedLabel
+  interface CustomizedLabelProps {
+    cx: number
+    cy: number
+    midAngle: number
+    innerRadius: number
+    outerRadius: number
+    percent: number
+    index: number
+  }
+
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent
+  }: CustomizedLabelProps) => {
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -100,7 +128,20 @@ export function SubgroupChart({ data, selectedCompany, selectedYear, selectedGro
     )
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  // Definir tipo para o objeto de payload do tooltip
+  interface TooltipPayload {
+    name: string
+    value: number
+    payload?: any
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: TooltipPayload[]
+    label?: string
+  }
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border rounded-md shadow-md">
@@ -143,7 +184,7 @@ export function SubgroupChart({ data, selectedCompany, selectedYear, selectedGro
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            formatter={(value, entry, index) => <span className="text-sm font-medium">{value}</span>}
+            formatter={(value) => <span className="text-sm font-medium">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>

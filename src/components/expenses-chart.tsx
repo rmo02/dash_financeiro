@@ -13,6 +13,9 @@ import {
   ResponsiveContainer,
 } from "recharts"
 
+// Adicionar uma definição de tipo para as abreviações de mês no início do arquivo, logo após as importações
+type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
+
 interface ExpensesChartProps {
   data: any[]
   selectedCompany: string
@@ -20,6 +23,7 @@ interface ExpensesChartProps {
 }
 
 export function ExpensesChart({ data, selectedCompany, selectedYear }: ExpensesChartProps) {
+  // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
     // Filter data by selected company and year if any
     let filteredData = [...data]
@@ -36,7 +40,7 @@ export function ExpensesChart({ data, selectedCompany, selectedYear }: ExpensesC
     }
 
     // Create an object with all months initialized to zero
-    const monthsTemplate = {
+    const monthsTemplate: Record<MonthAbbr, number> = {
       jan: 0,
       fev: 0,
       mar: 0,
@@ -60,14 +64,24 @@ export function ExpensesChart({ data, selectedCompany, selectedYear }: ExpensesC
         const date = new Date(item.PERÍODO)
         // Usar o mês UTC para evitar problemas de fuso horário
         const monthIndex = date.getUTCMonth()
-        const monthAbbr = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][
-          monthIndex
+        const monthAbbrArray: MonthAbbr[] = [
+          "jan",
+          "fev",
+          "mar",
+          "abr",
+          "mai",
+          "jun",
+          "jul",
+          "ago",
+          "set",
+          "out",
+          "nov",
+          "dez",
         ]
+        const monthAbbr = monthAbbrArray[monthIndex]
 
-        if (monthlyData[monthAbbr] !== undefined) {
-          // Usar valor absoluto para exibição no gráfico
-          monthlyData[monthAbbr] += Math.abs(Number(item.VALOR))
-        }
+        // Agora o TypeScript sabe que monthAbbr é uma chave válida
+        monthlyData[monthAbbr] += Math.abs(Number(item.VALOR))
       }
     })
 
@@ -78,10 +92,10 @@ export function ExpensesChart({ data, selectedCompany, selectedYear }: ExpensesC
     }))
 
     // Define month order for sorting
-    const monthOrder = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+    const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
     // Sort by month order
-    return result.sort((a, b) => monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month))
+    return result.sort((a, b) => monthOrder.indexOf(a.month as MonthAbbr) - monthOrder.indexOf(b.month as MonthAbbr))
   }, [data, selectedCompany, selectedYear])
 
   const formatCurrency = (value: number) => {

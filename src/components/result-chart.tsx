@@ -14,6 +14,8 @@ import {
   ResponsiveContainer,
 } from "recharts"
 
+type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
+
 interface ResultChartProps {
   data: any[]
   selectedCompany: string
@@ -37,7 +39,7 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
     }
 
     // Create an object with all months initialized to zero
-    const monthsTemplate = {
+    const monthsTemplate: Record<MonthAbbr, { revenue: number; deductions: number; expenses: number }> = {
       jan: { revenue: 0, deductions: 0, expenses: 0 },
       fev: { revenue: 0, deductions: 0, expenses: 0 },
       mar: { revenue: 0, deductions: 0, expenses: 0 },
@@ -59,16 +61,28 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
       const date = new Date(item.PERÍODO)
       // Usar o mês UTC para evitar problemas de fuso horário
       const monthIndex = date.getUTCMonth()
-      const monthAbbr = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][monthIndex]
+      const monthAbbrArray: MonthAbbr[] = [
+        "jan",
+        "fev",
+        "mar",
+        "abr",
+        "mai",
+        "jun",
+        "jul",
+        "ago",
+        "set",
+        "out",
+        "nov",
+        "dez",
+      ]
+      const monthAbbr = monthAbbrArray[monthIndex]
 
-      if (monthlyData[monthAbbr] !== undefined) {
-        if (item.GRUPO === "RECEITA") {
-          monthlyData[monthAbbr].revenue += Number(item.VALOR)
-        } else if (item.GRUPO === "DEDUCOES DE VENDAS") {
-          monthlyData[monthAbbr].deductions += Number(item.VALOR) // Já é negativo
-        } else if (item.GRUPO === "DESPESA") {
-          monthlyData[monthAbbr].expenses += Number(item.VALOR) // Já é negativo
-        }
+      if (item.GRUPO === "RECEITA") {
+        monthlyData[monthAbbr].revenue += Number(item.VALOR)
+      } else if (item.GRUPO === "DEDUCOES DE VENDAS") {
+        monthlyData[monthAbbr].deductions += Number(item.VALOR) // Já é negativo
+      } else if (item.GRUPO === "DESPESA") {
+        monthlyData[monthAbbr].expenses += Number(item.VALOR) // Já é negativo
       }
     })
 
@@ -79,10 +93,10 @@ export function ResultChart({ data, selectedCompany, selectedYear }: ResultChart
     }))
 
     // Define month order for sorting
-    const monthOrder = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+    const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
     // Sort by month order
-    return result.sort((a, b) => monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month))
+    return result.sort((a, b) => monthOrder.indexOf(a.month as MonthAbbr) - monthOrder.indexOf(b.month as MonthAbbr))
   }, [data, selectedCompany, selectedYear])
 
   const formatCurrency = (value: number) => {

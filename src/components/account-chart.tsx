@@ -3,6 +3,13 @@
 import { useMemo } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts"
 
+// Definir tipo para os dados do gráfico
+interface AccountData {
+  name: string
+  value: number
+  originalValue: number
+}
+
 interface AccountChartProps {
   data: any[]
   selectedCompany: string
@@ -68,30 +75,33 @@ export function AccountChart({
     }
 
     // Group by account name and calculate total values
-    const accountData = filteredData.reduce((acc: any, item: any) => {
-      const accountName = item["NOME CONTA"] || "Sem nome"
-      const accountCode = item["CÓD. CONTA"] || ""
-      const displayName = accountCode ? `${accountCode} - ${accountName}` : accountName
+    const accountData: Record<string, AccountData> = filteredData.reduce(
+      (acc: Record<string, AccountData>, item: any) => {
+        const accountName = item["NOME CONTA"] || "Sem nome"
+        const accountCode = item["CÓD. CONTA"] || ""
+        const displayName = accountCode ? `${accountCode} - ${accountName}` : accountName
 
-      if (!acc[displayName]) {
-        acc[displayName] = {
-          name: displayName,
-          value: 0,
-          originalValue: 0,
+        if (!acc[displayName]) {
+          acc[displayName] = {
+            name: displayName,
+            value: 0,
+            originalValue: 0,
+          }
         }
-      }
 
-      acc[displayName].originalValue += Number(item.VALOR)
-      acc[displayName].value += Math.abs(Number(item.VALOR))
+        acc[displayName].originalValue += Number(item.VALOR)
+        acc[displayName].value += Math.abs(Number(item.VALOR))
 
-      return acc
-    }, {})
+        return acc
+      },
+      {},
+    )
 
     // Convert to array, sort by absolute value and limit to top 10
     return Object.values(accountData)
-      .sort((a: any, b: any) => b.value - a.value)
+      .sort((a, b) => b.value - a.value)
       .slice(0, 10)
-      .map((item: any) => ({
+      .map((item) => ({
         name: item.name,
         value: item.originalValue,
       }))
@@ -107,7 +117,7 @@ export function AccountChart({
   }
 
   // Determine colors based on values
-  const getBarColor = (value: number) => {
+  const getBarColor = (value: number): string => {
     if (selectedGroup === "RECEITA") return "#4f46e5"
     if (selectedGroup === "DEDUCOES DE VENDAS") return "#f59e0b"
     if (selectedGroup === "DESPESA") return "#ef4444"
