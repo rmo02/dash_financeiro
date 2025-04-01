@@ -8,12 +8,18 @@ type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
+  attribute?: string
+  enableSystem?: boolean
+  disableTransitionOnChange?: boolean
 }
 
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
+  attribute = "class",
+  enableSystem = true,
+  disableTransitionOnChange = false,
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme)
@@ -21,17 +27,42 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
 
-    root.classList.remove("light", "dark")
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-
-      root.classList.add(systemTheme)
-      return
+    // Remove transition temporarily if disableTransitionOnChange is true
+    if (disableTransitionOnChange) {
+      root.classList.add("no-transitions")
     }
 
-    root.classList.add(theme)
-  }, [theme])
+    // Remove previous theme attribute/class
+    if (attribute === "class") {
+      root.classList.remove("light", "dark")
+    } else {
+      root.removeAttribute(attribute)
+    }
+
+    // Set new theme
+    if (theme === "system" && enableSystem) {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+
+      if (attribute === "class") {
+        root.classList.add(systemTheme)
+      } else {
+        root.setAttribute(attribute, systemTheme)
+      }
+    } else {
+      if (attribute === "class") {
+        root.classList.add(theme)
+      } else {
+        root.setAttribute(attribute, theme)
+      }
+    }
+
+    // Restore transitions
+    if (disableTransitionOnChange) {
+      setTimeout(() => {
+        root.classList.remove("no-transitions")
+      }, 0)
+    }
+  }, [theme, attribute, enableSystem, disableTransitionOnChange])
 
   const value = {
     theme,
