@@ -6,6 +6,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Responsive
 // Adicionar uma definição de tipo para as abreviações de mês no início do arquivo, logo após as importações
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
+// Atualizar a interface ExpensesChartProps para remover selectedGroups e selectedSubgroups
 interface ExpensesChartProps {
   data: any[]
   selectedCompanies: string[]

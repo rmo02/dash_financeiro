@@ -17,8 +17,8 @@ function App() {
     selectedCompanies,
     selectedMonths,
     selectedYear,
-    selectedGroup,
-    selectedSubgroup,
+    selectedGroups,
+    selectedSubgroups,
     metrics,
     isLoading,
     errorMessage,
@@ -26,8 +26,8 @@ function App() {
     setSelectedCompanies,
     setSelectedMonths,
     setSelectedYear,
-    setSelectedGroup,
-    setSelectedSubgroup,
+    setSelectedGroups,
+    setSelectedSubgroups,
     handleFileUpload,
     resetFilters,
     companyMetrics,
@@ -85,13 +85,13 @@ function App() {
                 selectedCompanies={selectedCompanies}
                 selectedMonths={selectedMonths}
                 selectedYear={selectedYear}
-                selectedGroup={selectedGroup}
-                selectedSubgroup={selectedSubgroup}
+                selectedGroups={selectedGroups}
+                selectedSubgroups={selectedSubgroups}
                 setSelectedCompanies={setSelectedCompanies}
                 setSelectedMonths={setSelectedMonths}
                 setSelectedYear={setSelectedYear}
-                setSelectedGroup={setSelectedGroup}
-                setSelectedSubgroup={setSelectedSubgroup}
+                setSelectedGroups={setSelectedGroups}
+                setSelectedSubgroups={setSelectedSubgroups}
                 resetFilters={resetFilters}
               />
 
@@ -99,6 +99,8 @@ function App() {
                 metrics={metrics}
                 selectedCompanies={selectedCompanies}
                 companyMetrics={companyMetrics}
+                selectedGroups={selectedGroups}
+                selectedSubgroups={selectedSubgroups}
               />
 
               <DashboardTabs
@@ -106,8 +108,8 @@ function App() {
                 selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
                 selectedMonths={selectedMonths}
-                selectedGroup={selectedGroup}
-                selectedSubgroup={selectedSubgroup}
+                selectedGroups={selectedGroups}
+                selectedSubgroups={selectedSubgroups}
               />
             </>
           )}

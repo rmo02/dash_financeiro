@@ -26,10 +26,11 @@ export function useFinancialData() {
   // Modificar para arrays para seleção múltipla
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
   const [selectedMonths, setSelectedMonths] = useState<string[]>([])
+  // Modificar grupo e subgrupo para arrays para seleção múltipla
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([])
+  const [selectedSubgroups, setSelectedSubgroups] = useState<string[]>([])
 
   const [selectedYear, setSelectedYear] = useState<string>("")
-  const [selectedGroup, setSelectedGroup] = useState<string>("Todos")
-  const [selectedSubgroup, setSelectedSubgroup] = useState<string>("Todos")
   const [filteredData, setFilteredData] = useState<any[]>([])
   const [metrics, setMetrics] = useState({
     grossRevenue: 0,
@@ -97,8 +98,8 @@ export function useFinancialData() {
           setSelectedYear(uniqueYears[uniqueYears.length - 1]) // Select most recent year
         }
 
-        setSelectedGroup("Todos") // Default to "Todos"
-        setSelectedSubgroup("Todos") // Default to "Todos"
+        setSelectedGroups([]) // Iniciar com nenhum grupo selecionado (todos)
+        setSelectedSubgroups([]) // Iniciar com nenhum subgrupo selecionado (todos)
         setSelectedMonths([]) // Iniciar com nenhum mês selecionado (todos)
 
         setIsLoading(false)
@@ -153,12 +154,14 @@ export function useFinancialData() {
         })
       }
 
-      if (selectedGroup && selectedGroup !== "Todos") {
-        filtered = filtered.filter((item) => item.GRUPO === selectedGroup)
+      // Filtrar por grupos selecionados (múltiplos)
+      if (selectedGroups.length > 0) {
+        filtered = filtered.filter((item) => selectedGroups.includes(item.GRUPO))
       }
 
-      if (selectedSubgroup && selectedSubgroup !== "Todos") {
-        filtered = filtered.filter((item) => item.SUBGRUPO === selectedSubgroup)
+      // Filtrar por subgrupos selecionados (múltiplos)
+      if (selectedSubgroups.length > 0) {
+        filtered = filtered.filter((item) => selectedSubgroups.includes(item.SUBGRUPO))
       }
 
       setFilteredData(filtered)
@@ -244,23 +247,20 @@ export function useFinancialData() {
         setCompanyMetrics({})
       }
     }
-  }, [data, selectedCompanies, selectedMonths, selectedYear, selectedGroup, selectedSubgroup])
+  }, [data, selectedCompanies, selectedMonths, selectedYear, selectedGroups, selectedSubgroups])
 
   const resetFilters = () => {
     if (companies.length > 0) setSelectedCompanies([companies[0]])
     if (years.length > 0) setSelectedYear(years[years.length - 1])
     setSelectedMonths([])
-    setSelectedGroup("Todos")
-    setSelectedSubgroup("Todos")
+    setSelectedGroups([])
+    setSelectedSubgroups([])
   }
 
-  // Filtrar subgrupos com base no grupo selecionado
+  // Filtrar subgrupos com base nos grupos selecionados
   const filteredSubgroups =
-    selectedGroup !== "Todos"
-      ? [
-          "Todos",
-          ...subgroups.filter((sg) => data.some((item) => item.GRUPO === selectedGroup && item.SUBGRUPO === sg)),
-        ]
+    selectedGroups.length > 0
+      ? ["Todos", ...new Set(data.filter((item) => selectedGroups.includes(item.GRUPO)).map((item) => item.SUBGRUPO))]
       : subgroups
 
   return {
@@ -273,8 +273,8 @@ export function useFinancialData() {
     selectedCompanies,
     selectedMonths,
     selectedYear,
-    selectedGroup,
-    selectedSubgroup,
+    selectedGroups,
+    selectedSubgroups,
     filteredData,
     metrics,
     companyMetrics,
@@ -284,8 +284,8 @@ export function useFinancialData() {
     setSelectedCompanies,
     setSelectedMonths,
     setSelectedYear,
-    setSelectedGroup,
-    setSelectedSubgroup,
+    setSelectedGroups,
+    setSelectedSubgroups,
     handleFileUpload,
     resetFilters,
   }

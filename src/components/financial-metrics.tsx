@@ -23,13 +23,63 @@ interface FinancialMetricsProps {
   }
   selectedCompanies: string[]
   companyMetrics?: Record<string, CompanyMetrics>
+  selectedGroups?: string[]
+  selectedSubgroups?: string[]
 }
 
-export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetrics = {} }: FinancialMetricsProps) {
+export function FinancialMetrics({
+  metrics,
+  selectedCompanies = [],
+  companyMetrics = {},
+  selectedGroups = [],
+  selectedSubgroups = [],
+}: FinancialMetricsProps) {
   const { grossRevenue, deductions, netRevenue, expenses, netResult, netMargin } = metrics
 
   // Determinar se devemos mostrar métricas por empresa ou métricas consolidadas
   const showCompanyMetrics = selectedCompanies?.length > 1 && Object.keys(companyMetrics || {}).length > 0
+
+  // Função para gerar tooltips dinâmicos baseados nas seleções
+  const getDynamicTooltip = (metricType: string) => {
+    switch (metricType) {
+      case "grossRevenue":
+        return selectedGroups.length > 0 && selectedGroups.includes("RECEITA")
+          ? `Soma dos valores ${
+              selectedSubgroups.length > 0
+                ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                : "de todos os subgrupos"
+            } do grupo RECEITA.`
+          : "Soma de todos os valores do grupo RECEITA, representando o total de receitas antes das deduções."
+      case "deductions":
+        return selectedGroups.length > 0 && selectedGroups.includes("DEDUCOES DE VENDAS")
+          ? `Soma do valor absoluto dos valores ${
+              selectedSubgroups.length > 0
+                ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                : "de todos os subgrupos"
+            } do grupo DEDUCOES DE VENDAS.`
+          : "Soma do valor absoluto de todos os valores do grupo DEDUCOES DE VENDAS, incluindo impostos e outras deduções."
+      case "netRevenue":
+        return "Calculada como Receita Bruta + Deduções (as deduções já são valores negativos), representando o valor efetivo após deduções."
+      case "expenses":
+        return selectedGroups.length > 0 && selectedGroups.includes("DESPESA")
+          ? `Soma do valor absoluto dos valores ${
+              selectedSubgroups.length > 0
+                ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                : "de todos os subgrupos"
+            } do grupo DESPESA.`
+          : "Soma do valor absoluto de todos os valores do grupo DESPESA, incluindo despesas operacionais, financeiras e administrativas."
+      case "netResult":
+        return `Calculado como Receita Líquida - Despesas, representando o lucro ou prejuízo final após todas as receitas e despesas${
+          selectedGroups.length > 0 || selectedSubgroups.length > 0 ? `, considerando os filtros selecionados.` : "."
+        }`
+      case "netMargin":
+        return `Calculada como (Resultado Líquido / Receita Líquida) × 100, representando a porcentagem de lucro em relação à receita${
+          selectedGroups.length > 0 || selectedSubgroups.length > 0 ? `, considerando os filtros selecionados.` : "."
+        }`
+      default:
+        return ""
+    }
+  }
 
   return (
     <TooltipProvider>
@@ -44,7 +94,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Receita Bruta"
                 value={grossRevenue}
                 description="Total de receitas antes das deduções"
-                tooltipText="Soma de todos os valores do grupo RECEITA, representando o total de receitas antes das deduções."
+                tooltipText={getDynamicTooltip("grossRevenue")}
                 icon={<TrendingUpIcon className="h-5 w-5 text-blue-600" />}
                 iconBgColor="bg-blue-100"
                 titleColor="text-blue-700"
@@ -56,7 +106,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Deduções"
                 value={deductions}
                 description="Impostos e outras deduções"
-                tooltipText="Soma do valor absoluto de todos os valores do grupo DEDUCOES DE VENDAS, incluindo impostos e outras deduções."
+                tooltipText={getDynamicTooltip("deductions")}
                 icon={<TrendingDownIcon className="h-5 w-5 text-amber-600" />}
                 iconBgColor="bg-amber-100"
                 titleColor="text-amber-700"
@@ -68,7 +118,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Receita Líquida"
                 value={netRevenue}
                 description="Receita bruta menos deduções"
-                tooltipText="Calculada como Receita Bruta + Deduções (as deduções já são valores negativos), representando o valor efetivo após deduções."
+                tooltipText={getDynamicTooltip("netRevenue")}
                 icon={<TrendingUpIcon className="h-5 w-5 text-indigo-600" />}
                 iconBgColor="bg-indigo-100"
                 titleColor="text-indigo-700"
@@ -80,7 +130,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Despesas"
                 value={expenses}
                 description="Total de gastos operacionais"
-                tooltipText="Soma do valor absoluto de todos os valores do grupo DESPESA, incluindo despesas operacionais, financeiras e administrativas."
+                tooltipText={getDynamicTooltip("expenses")}
                 icon={<TrendingDownIcon className="h-5 w-5 text-red-600" />}
                 iconBgColor="bg-red-100"
                 titleColor="text-red-700"
@@ -92,7 +142,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Resultado Líquido"
                 value={netResult}
                 description="Receita líquida menos despesas"
-                tooltipText="Calculado como Receita Líquida - Despesas, representando o lucro ou prejuízo final após todas as receitas e despesas."
+                tooltipText={getDynamicTooltip("netResult")}
                 icon={
                   netResult >= 0 ? (
                     <ArrowUpIcon className="h-5 w-5 text-emerald-600" />
@@ -110,7 +160,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                 title="Margem Líquida"
                 value={netMargin}
                 description="Percentual do resultado sobre a receita"
-                tooltipText="Calculada como (Resultado Líquido / Receita Líquida) × 100, representando a porcentagem de lucro em relação à receita."
+                tooltipText={getDynamicTooltip("netMargin")}
                 icon={
                   netMargin >= 0 ? (
                     <ArrowUpIcon className="h-5 w-5 text-purple-600" />
@@ -147,7 +197,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Receita Bruta"
                     value={companyMetric.grossRevenue}
                     description="Total de receitas antes das deduções"
-                    tooltipText="Soma de todos os valores do grupo RECEITA, representando o total de receitas antes das deduções."
+                    tooltipText={getDynamicTooltip("grossRevenue")}
                     icon={<TrendingUpIcon className="h-5 w-5 text-blue-600" />}
                     iconBgColor="bg-blue-100"
                     titleColor="text-blue-700"
@@ -159,7 +209,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Deduções"
                     value={companyMetric.deductions}
                     description="Impostos e outras deduções"
-                    tooltipText="Soma do valor absoluto de todos os valores do grupo DEDUCOES DE VENDAS, incluindo impostos e outras deduções."
+                    tooltipText={getDynamicTooltip("deductions")}
                     icon={<TrendingDownIcon className="h-5 w-5 text-amber-600" />}
                     iconBgColor="bg-amber-100"
                     titleColor="text-amber-700"
@@ -171,7 +221,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Receita Líquida"
                     value={companyMetric.netRevenue}
                     description="Receita bruta menos deduções"
-                    tooltipText="Calculada como Receita Bruta + Deduções (as deduções já são valores negativos), representando o valor efetivo após deduções."
+                    tooltipText={getDynamicTooltip("netRevenue")}
                     icon={<TrendingUpIcon className="h-5 w-5 text-indigo-600" />}
                     iconBgColor="bg-indigo-100"
                     titleColor="text-indigo-700"
@@ -183,7 +233,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Despesas"
                     value={companyMetric.expenses}
                     description="Total de gastos operacionais"
-                    tooltipText="Soma do valor absoluto de todos os valores do grupo DESPESA, incluindo despesas operacionais, financeiras e administrativas."
+                    tooltipText={getDynamicTooltip("expenses")}
                     icon={<TrendingDownIcon className="h-5 w-5 text-red-600" />}
                     iconBgColor="bg-red-100"
                     titleColor="text-red-700"
@@ -195,7 +245,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Resultado Líquido"
                     value={companyMetric.netResult}
                     description="Receita líquida menos despesas"
-                    tooltipText="Calculado como Receita Líquida - Despesas, representando o lucro ou prejuízo final após todas as receitas e despesas."
+                    tooltipText={getDynamicTooltip("netResult")}
                     icon={
                       companyMetric.netResult >= 0 ? (
                         <ArrowUpIcon className="h-5 w-5 text-emerald-600" />
@@ -213,7 +263,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
                     title="Margem Líquida"
                     value={companyMetric.netMargin}
                     description="Percentual do resultado sobre a receita"
-                    tooltipText="Calculada como (Resultado Líquido / Receita Líquida) × 100, representando a porcentagem de lucro em relação à receita."
+                    tooltipText={getDynamicTooltip("netMargin")}
                     icon={
                       companyMetric.netMargin >= 0 ? (
                         <ArrowUpIcon className="h-5 w-5 text-purple-600" />
@@ -240,7 +290,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Receita Bruta"
             value={grossRevenue}
             description="Total de receitas antes das deduções"
-            tooltipText="Soma de todos os valores do grupo RECEITA, representando o total de receitas antes das deduções."
+            tooltipText={getDynamicTooltip("grossRevenue")}
             icon={<TrendingUpIcon className="h-5 w-5 text-blue-600" />}
             iconBgColor="bg-blue-100"
             titleColor="text-blue-700"
@@ -252,7 +302,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Deduções"
             value={deductions}
             description="Impostos e outras deduções"
-            tooltipText="Soma do valor absoluto de todos os valores do grupo DEDUCOES DE VENDAS, incluindo impostos e outras deduções."
+            tooltipText={getDynamicTooltip("deductions")}
             icon={<TrendingDownIcon className="h-5 w-5 text-amber-600" />}
             iconBgColor="bg-amber-100"
             titleColor="text-amber-700"
@@ -264,7 +314,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Receita Líquida"
             value={netRevenue}
             description="Receita bruta menos deduções"
-            tooltipText="Calculada como Receita Bruta + Deduções (as deduções já são valores negativos), representando o valor efetivo após deduções."
+            tooltipText={getDynamicTooltip("netRevenue")}
             icon={<TrendingUpIcon className="h-5 w-5 text-indigo-600" />}
             iconBgColor="bg-indigo-100"
             titleColor="text-indigo-700"
@@ -276,7 +326,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Despesas"
             value={expenses}
             description="Total de gastos operacionais"
-            tooltipText="Soma do valor absoluto de todos os valores do grupo DESPESA, incluindo despesas operacionais, financeiras e administrativas."
+            tooltipText={getDynamicTooltip("expenses")}
             icon={<TrendingDownIcon className="h-5 w-5 text-red-600" />}
             iconBgColor="bg-red-100"
             titleColor="text-red-700"
@@ -288,7 +338,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Resultado Líquido"
             value={netResult}
             description="Receita líquida menos despesas"
-            tooltipText="Calculado como Receita Líquida - Despesas, representando o lucro ou prejuízo final após todas as receitas e despesas."
+            tooltipText={getDynamicTooltip("netResult")}
             icon={
               netResult >= 0 ? (
                 <ArrowUpIcon className="h-5 w-5 text-emerald-600" />
@@ -306,7 +356,7 @@ export function FinancialMetrics({ metrics, selectedCompanies = [], companyMetri
             title="Margem Líquida"
             value={netMargin}
             description="Percentual do resultado sobre a receita"
-            tooltipText="Calculada como (Resultado Líquido / Receita Líquida) × 100, representando a porcentagem de lucro em relação à receita."
+            tooltipText={getDynamicTooltip("netMargin")}
             icon={
               netMargin >= 0 ? (
                 <ArrowUpIcon className="h-5 w-5 text-purple-600" />
@@ -374,7 +424,7 @@ function MetricCard({
             <TooltipTrigger asChild>
               <InfoIcon className={`h-4 w-4 ${tooltipIconColor} cursor-help`} />
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
+            <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
               <p>{tooltipText}</p>
             </TooltipContent>
           </Tooltip>

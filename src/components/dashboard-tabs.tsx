@@ -23,8 +23,8 @@ interface DashboardTabsProps {
   selectedCompanies: string[]
   selectedYear: string
   selectedMonths: string[]
-  selectedGroup: string
-  selectedSubgroup: string
+  selectedGroups: string[]
+  selectedSubgroups: string[]
 }
 
 export function DashboardTabs({
@@ -32,8 +32,8 @@ export function DashboardTabs({
   selectedCompanies,
   selectedYear,
   selectedMonths,
-  selectedGroup,
-  selectedSubgroup,
+  selectedGroups,
+  selectedSubgroups,
 }: DashboardTabsProps) {
   // Função para formatar a lista de empresas selecionadas
   const formatCompanies = () => {
@@ -50,6 +50,20 @@ export function DashboardTabs({
       return month.charAt(0).toUpperCase() + month.slice(1)
     }
     return `${selectedMonths.length} meses selecionados`
+  }
+
+  // Função para formatar a lista de grupos selecionados
+  const formatGroups = () => {
+    if (selectedGroups.length === 0) return "todos os grupos"
+    if (selectedGroups.length === 1) return selectedGroups[0]
+    return `${selectedGroups.length} grupos selecionados`
+  }
+
+  // Função para formatar a lista de subgrupos selecionados
+  const formatSubgroups = () => {
+    if (selectedSubgroups.length === 0) return "todos os subgrupos"
+    if (selectedSubgroups.length === 1) return selectedSubgroups[0]
+    return `${selectedSubgroups.length} subgrupos selecionados`
   }
 
   return (
@@ -131,10 +145,15 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-blue-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#DBEAFE] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe a receita bruta mensal, calculada a partir da soma de todos os valores do grupo
-                            RECEITA para cada mês.
+                            {selectedGroups.length > 0 && selectedGroups.includes("RECEITA")
+                              ? `Exibe a receita bruta mensal, calculada a partir da soma dos valores ${
+                                  selectedSubgroups.length > 0
+                                    ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                                    : "de todos os subgrupos"
+                                } do grupo RECEITA para cada mês.`
+                              : "Exibe a receita bruta mensal, calculada a partir da soma de todos os valores do grupo RECEITA para cada mês."}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -175,10 +194,15 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-amber-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#FEF3C6] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe as deduções mensais, calculadas a partir da soma do valor absoluto de todos os valores
-                            do grupo DEDUCOES DE VENDAS para cada mês.
+                            {selectedGroups.length > 0 && selectedGroups.includes("DEDUCOES DE VENDAS")
+                              ? `Exibe as deduções mensais, calculadas a partir da soma do valor absoluto dos valores ${
+                                  selectedSubgroups.length > 0
+                                    ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                                    : "de todos os subgrupos"
+                                } do grupo DEDUCOES DE VENDAS para cada mês.`
+                              : "Exibe as deduções mensais, calculadas a partir da soma do valor absoluto de todos os valores do grupo DEDUCOES DE VENDAS para cada mês."}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -218,10 +242,15 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-red-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#FFE2E2] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe as despesas mensais, calculadas a partir da soma do valor absoluto de todos os valores
-                            do grupo DESPESA para cada mês.
+                            {selectedGroups.length > 0 && selectedGroups.includes("DESPESA")
+                              ? `Exibe as despesas mensais, calculadas a partir da soma do valor absoluto dos valores ${
+                                  selectedSubgroups.length > 0
+                                    ? `dos subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                                    : "de todos os subgrupos"
+                                } do grupo DESPESA para cada mês.`
+                              : "Exibe as despesas mensais, calculadas a partir da soma do valor absoluto de todos os valores do grupo DESPESA para cada mês."}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -261,10 +290,17 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-emerald-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#D0FAE5] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
                             Exibe o resultado líquido mensal, calculado como Receita + Deduções + Despesas para cada
-                            mês. Valores positivos representam lucro e negativos representam prejuízo.
+                            mês, considerando{" "}
+                            {selectedGroups.length > 0
+                              ? `os grupos selecionados (${selectedGroups.join(", ")})`
+                              : "todos os grupos"}
+                            {selectedSubgroups.length > 0
+                              ? ` e subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                              : ""}
+                            . Valores positivos representam lucro e negativos representam prejuízo.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -305,10 +341,17 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-purple-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#F3E8FF] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe a distribuição percentual dos valores por grupo (RECEITA, DEDUCOES DE VENDAS,
-                            DESPESA), usando o valor absoluto para facilitar a comparação.
+                            Exibe a distribuição percentual dos valores por grupo
+                            {selectedGroups.length > 0
+                              ? ` (${selectedGroups.join(", ")})`
+                              : " (RECEITA, DEDUCOES DE VENDAS, DESPESA)"}
+                            , usando o valor absoluto para facilitar a comparação
+                            {selectedSubgroups.length > 0
+                              ? `, considerando apenas os subgrupos selecionados (${selectedSubgroups.join(", ")})`
+                              : ""}
+                            .
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -349,17 +392,18 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-violet-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#F3E8FF] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe a distribuição percentual dos valores por subgrupo, usando o valor absoluto para
-                            facilitar a comparação. Filtrável por grupo específico.
+                            Exibe a distribuição percentual dos valores por subgrupo
+                            {selectedSubgroups.length > 0 ? ` (${selectedSubgroups.join(", ")})` : ""}, usando o valor
+                            absoluto para facilitar a comparação.
+                            {selectedGroups.length > 0 ? ` Filtrado pelos grupos: ${selectedGroups.join(", ")}.` : ""}
                           </p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Distribuição de valores por subgrupo{" "}
-                      {selectedGroup !== "Todos" ? `para o grupo ${selectedGroup}` : ""}
+                      Distribuição de valores por subgrupo {selectedGroups.length > 0 ? `para ${formatGroups()}` : ""}
                     </CardDescription>
                   </div>
                 </div>
@@ -370,8 +414,8 @@ export function DashboardTabs({
                 data={data}
                 selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
-                selectedGroup={selectedGroup}
                 selectedMonths={selectedMonths}
+                selectedGroup={selectedGroups.length === 1 ? selectedGroups[0] : ""}
               />
             </CardContent>
           </Card>
@@ -394,18 +438,21 @@ export function DashboardTabs({
                         <TooltipTrigger asChild>
                           <InfoIcon className="h-4 w-4 text-amber-400 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs bg-[#FEF3C6] shadow-md">
+                        <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
-                            Exibe as 10 principais contas por valor absoluto, mostrando o código e nome da conta. As
-                            cores indicam se o valor é positivo (receita) ou negativo (despesa/dedução).
+                            Exibe as 10 principais contas por valor absoluto, mostrando o código e nome da conta.
+                            {selectedGroups.length > 0 ? ` Filtrado pelos grupos: ${selectedGroups.join(", ")}.` : ""}
+                            {selectedSubgroups.length > 0
+                              ? ` Filtrado pelos subgrupos: ${selectedSubgroups.join(", ")}.`
+                              : ""}
+                            As cores indicam se o valor é positivo (receita) ou negativo (despesa/dedução).
                           </p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      As 10 principais contas por valor{" "}
-                      {selectedGroup !== "Todos" ? `para o grupo ${selectedGroup}` : ""}
-                      {selectedSubgroup !== "Todos" ? ` e subgrupo ${selectedSubgroup}` : ""}
+                      As 10 principais contas por valor {selectedGroups.length > 0 ? `para ${formatGroups()}` : ""}
+                      {selectedSubgroups.length > 0 ? ` e ${formatSubgroups()}` : ""}
                     </CardDescription>
                   </div>
                 </div>
@@ -417,8 +464,8 @@ export function DashboardTabs({
                 selectedCompanies={selectedCompanies}
                 selectedYear={selectedYear}
                 selectedMonths={selectedMonths}
-                selectedGroup={selectedGroup}
-                selectedSubgroup={selectedSubgroup}
+                selectedGroup={selectedGroups.length === 1 ? selectedGroups[0] : ""}
+                selectedSubgroup={selectedSubgroups.length === 1 ? selectedSubgroups[0] : ""}
               />
             </CardContent>
           </Card>
