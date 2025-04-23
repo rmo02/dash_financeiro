@@ -14,41 +14,16 @@ interface ExpensesChartProps {
   selectedMonths: string[]
 }
 
-export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedMonths }: ExpensesChartProps) {
+export function ExpensesChart({ data, selectedCompanies, selectedYear }: ExpensesChartProps) {
   // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
-    // Filter data by selected year and months
+    // Filter data by selected year only (ignore selectedMonths for this chart)
     let filteredData = [...data]
 
     if (selectedYear) {
       filteredData = filteredData.filter((item) => {
         const date = new Date(item.PERÍODO)
         return date.getUTCFullYear().toString() === selectedYear
-      })
-    }
-
-    // Filtrar por meses selecionados (múltiplos)
-    if (selectedMonths.length > 0) {
-      filteredData = filteredData.filter((item) => {
-        const date = new Date(item.PERÍODO)
-        // Usar os meses em português baseados no índice do mês UTC
-        const monthIndex = date.getUTCMonth()
-        const monthNames = [
-          "janeiro",
-          "fevereiro",
-          "março",
-          "abril",
-          "maio",
-          "junho",
-          "julho",
-          "agosto",
-          "setembro",
-          "outubro",
-          "novembro",
-          "dezembro",
-        ]
-        const itemMonth = monthNames[monthIndex].toLowerCase()
-        return selectedMonths.includes(itemMonth)
       })
     }
 
@@ -123,7 +98,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
     })
 
     return result
-  }, [data, selectedCompanies, selectedYear, selectedMonths])
+  }, [data, selectedCompanies, selectedYear]) // Removido selectedMonths da dependência
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -171,6 +146,22 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
     return result
   }, [selectedCompanies])
 
+  // Mapeamento de abreviações para nomes completos dos meses
+  const monthNames: Record<MonthAbbr, string> = {
+    jan: "Janeiro",
+    fev: "Fevereiro",
+    mar: "Março",
+    abr: "Abril",
+    mai: "Maio",
+    jun: "Junho",
+    jul: "Julho",
+    ago: "Agosto",
+    set: "Setembro",
+    out: "Outubro",
+    nov: "Novembro",
+    dez: "Dezembro",
+  }
+
   if (chartData.length === 0) {
     return (
       <div className="w-full h-[500px] flex items-center justify-center">
@@ -192,6 +183,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
             tickMargin={20}
             tick={{ fill: "#666", fontSize: 12 }}
             axisLine={{ stroke: "#e0e0e0" }}
+            tickFormatter={(value) => monthNames[value as MonthAbbr] || value}
           />
           <YAxis
             tickFormatter={(value) => formatCurrency(value)}
@@ -201,7 +193,9 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
           />
           <Tooltip
             formatter={(value: number, name: string) => [formatCurrency(value), name]}
-            labelFormatter={(label) => `Período: ${label}`}
+            labelFormatter={(label) =>
+              `${monthNames[label as MonthAbbr] || label}${selectedYear ? ` de ${selectedYear}` : ""}`
+            }
             contentStyle={{
               backgroundColor: "white",
               border: "1px solid #e0e0e0",
@@ -212,7 +206,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company) => (
+          {selectedCompanies.map((company, ) => (
             <Bar
               key={company}
               dataKey={company}
@@ -227,4 +221,3 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
     </div>
   )
 }
-
