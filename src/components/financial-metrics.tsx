@@ -412,6 +412,11 @@ function MetricCard({
     }).format(value)
   }
 
+  // Determinar se devemos mostrar o valor absoluto ou o valor real
+  const displayValue = title === "Despesas" ? Math.abs(value) : value
+  // Determinar se o valor é negativo para estilização
+  const isNegative = value < 0 && title !== "Despesas" // Despesas são naturalmente negativas
+
   return (
     <Card
       className={`overflow-hidden rounded-lg border-0 shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-1 bg-gradient-to-br ${gradientColor}`}
@@ -436,8 +441,11 @@ function MetricCard({
         </div>
       </CardHeader>
       <CardContent className="pt-2 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
-        <div className="text-base sm:text-xl md:text-2xl font-bold text-slate-800 truncate">
-          {isPercentage ? `${value.toFixed(2)}%` : formatCurrency(value)}
+        <div
+          className={`text-base sm:text-xl md:text-2xl font-bold ${isNegative ? "text-red-600" : "text-slate-800"} truncate`}
+        >
+          {isPercentage ? `${value.toFixed(2)}%` : formatCurrency(displayValue)}
+          {isNegative && !isPercentage && " (negativo)"}
         </div>
         <p className="text-xs text-slate-500 mt-1 line-clamp-2">{description}</p>
       </CardContent>

@@ -192,25 +192,21 @@ export function useFinancialData() {
       const netRevenue = grossRevenue + deductions
 
       // Despesas (GRUPO = DESPESA)
-      let expenses = 0
-      const despesaItems = filtered.filter((item) => item.GRUPO === "DESPESA")
+      const expenses = filtered
+        .filter((item) => item.GRUPO === "DESPESA")
+        .reduce((sum, item) => sum + Number(item.VALOR), 0) // Já são valores negativos
 
-      despesaItems.forEach((item) => {
-        // Usar o valor original, respeitando o sinal (positivo ou negativo)
-        expenses += Number(item.VALOR)
-      })
-
-      // Resultado líquido = Receita líquida - Despesas
-      const netResult = netRevenue - expenses
+      // Resultado líquido = Receita líquida + Despesas (despesas já são negativas)
+      const netResult = netRevenue + expenses
 
       // Margem líquida = (Resultado líquido / Receita líquida) * 100
-      const netMargin = netRevenue > 0 ? (netResult / netRevenue) * 100 : 0
+      const netMargin = netRevenue !== 0 ? (netResult / Math.abs(netRevenue)) * 100 : 0
 
       setMetrics({
         grossRevenue,
         deductions: Math.abs(deductions), // Valor absoluto para exibição
         netRevenue,
-        expenses,
+        expenses, // Mantém o sinal negativo
         netResult,
         netMargin,
       })
@@ -237,25 +233,21 @@ export function useFinancialData() {
           const companyNetRevenue = companyGrossRevenue + companyDeductions
 
           // Despesas (GRUPO = DESPESA)
-          let companyExpenses = 0
-          const companyDespesaItems = companyData.filter((item) => item.GRUPO === "DESPESA")
+          const companyExpenses = companyData
+            .filter((item) => item.GRUPO === "DESPESA")
+            .reduce((sum, item) => sum + Number(item.VALOR), 0) // Já são valores negativos
 
-          companyDespesaItems.forEach((item) => {
-            // Usar o valor original, respeitando o sinal (positivo ou negativo)
-            companyExpenses += Number(item.VALOR)
-          })
-
-          // Resultado líquido = Receita líquida - Despesas
-          const companyNetResult = companyNetRevenue - companyExpenses
+          // Resultado líquido = Receita líquida + Despesas (despesas já são negativas)
+          const companyNetResult = companyNetRevenue + companyExpenses
 
           // Margem líquida = (Resultado líquido / Receita líquida) * 100
-          const companyNetMargin = companyNetRevenue > 0 ? (companyNetResult / companyNetRevenue) * 100 : 0
+          const companyNetMargin = companyNetRevenue !== 0 ? (companyNetResult / Math.abs(companyNetRevenue)) * 100 : 0
 
           newCompanyMetrics[company] = {
             grossRevenue: companyGrossRevenue,
             deductions: Math.abs(companyDeductions), // Valor absoluto para exibição
             netRevenue: companyNetRevenue,
-            expenses: companyExpenses,
+            expenses: companyExpenses, // Mantém o sinal negativo
             netResult: companyNetResult,
             netMargin: companyNetMargin,
           }
