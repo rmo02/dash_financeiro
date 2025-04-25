@@ -24,7 +24,7 @@ interface ResultChartProps {
   selectedMonths: string[]
 }
 
-export function ResultChart({ data, selectedCompanies, selectedYear }: ResultChartProps) {
+export function ResultChart({ data, selectedCompanies, selectedYear, selectedMonths }: ResultChartProps) {
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
     let filteredData = [...data]
@@ -100,8 +100,11 @@ export function ResultChart({ data, selectedCompanies, selectedYear }: ResultCha
       } else if (item.GRUPO === "DESPESA") {
         // Verificar se é DESPESA COM PESSOAL em dezembro
         if (isDecember && isPersonnelExpense) {
-          // Usar o valor exato para dezembro e DESPESA COM PESSOAL
-          companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR)
+          // Usar o valor considerando o sinal
+          const valorAtual = Number(item.VALOR)
+          // Se for negativo, usar o valor absoluto; se for positivo, usar o valor como está
+          const valorAdicionar = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+          companiesData[item.CIA][monthAbbr].expenses += valorAdicionar
         } else {
           // Para outros casos, continuar usando o valor normal
           companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR) // Já é negativo
@@ -239,7 +242,7 @@ export function ResultChart({ data, selectedCompanies, selectedYear }: ResultCha
           <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
 
           {/* Renderizar uma barra ou linha para cada empresa */}
-          {selectedCompanies.map((company) =>
+          {selectedCompanies.map((company, index) =>
             selectedCompanies.length > 3 ? (
               // Usar linhas quando há muitas empresas para melhor visualização
               <Line

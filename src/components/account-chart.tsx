@@ -10,6 +10,10 @@ interface AccountData {
   originalValue: number
 }
 
+interface ChartDataItem {
+  name: string
+  value: number
+}
 
 interface AccountChartProps {
   data: any[]
@@ -100,13 +104,11 @@ export function AccountChart({
         acc[displayName].originalValue += Number(item.VALOR)
 
         if (isDecember && isPersonnelExpense) {
-          // Para dezembro e DESPESA COM PESSOAL, usar o valor exato
+          // Para dezembro e DESPESA COM PESSOAL, usar o valor considerando o sinal
           const valorAtual = Number(item.VALOR)
-          if (valorAtual < 0) {
-            acc[displayName].value += Math.abs(valorAtual)
-          } else {
-            acc[displayName].value += valorAtual
-          }
+          // Se for negativo, usar o valor absoluto; se for positivo, usar o valor como está
+          const valorAdicionar = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+          acc[displayName].value += valorAdicionar
         } else {
           // Para outros casos, usar valor absoluto
           acc[displayName].value += Math.abs(Number(item.VALOR))
@@ -152,7 +154,18 @@ export function AccountChart({
     )
   }
 
+  // Definir tipo para o objeto de payload do tooltip
+  interface TooltipPayload {
+    name: string
+    value: number
+    payload?: any
+  }
 
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: TooltipPayload[]
+    label?: string
+  }
 
   return (
     <div className="w-full h-[500px]">

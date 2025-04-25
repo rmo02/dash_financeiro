@@ -45,10 +45,6 @@ export function useFinancialData() {
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [fileName, setFileName] = useState<string>("")
 
-  // Atualizar a função handleFileUpload para lidar com a nova aba do Excel
-  // Adicionar uma função para corrigir o valor de DESPESA COM PESSOAL em dezembro
-  // Dentro da função handleFileUpload, após o processamento dos dados:
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -196,9 +192,13 @@ export function useFinancialData() {
       const netRevenue = grossRevenue + deductions
 
       // Despesas (GRUPO = DESPESA)
-      const expenses = filtered
-        .filter((item) => item.GRUPO === "DESPESA")
-        .reduce((sum, item) => sum + Math.abs(Number(item.VALOR)), 0) // Usar valor absoluto
+      let expenses = 0
+      const despesaItems = filtered.filter((item) => item.GRUPO === "DESPESA")
+
+      despesaItems.forEach((item) => {
+        // Usar o valor original, respeitando o sinal (positivo ou negativo)
+        expenses += Number(item.VALOR)
+      })
 
       // Resultado líquido = Receita líquida - Despesas
       const netResult = netRevenue - expenses
@@ -237,9 +237,13 @@ export function useFinancialData() {
           const companyNetRevenue = companyGrossRevenue + companyDeductions
 
           // Despesas (GRUPO = DESPESA)
-          const companyExpenses = companyData
-            .filter((item) => item.GRUPO === "DESPESA")
-            .reduce((sum, item) => sum + Math.abs(Number(item.VALOR)), 0) // Usar valor absoluto
+          let companyExpenses = 0
+          const companyDespesaItems = companyData.filter((item) => item.GRUPO === "DESPESA")
+
+          companyDespesaItems.forEach((item) => {
+            // Usar o valor original, respeitando o sinal (positivo ou negativo)
+            companyExpenses += Number(item.VALOR)
+          })
 
           // Resultado líquido = Receita líquida - Despesas
           const companyNetResult = companyNetRevenue - companyExpenses
