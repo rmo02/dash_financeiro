@@ -10,10 +10,6 @@ interface AccountData {
   originalValue: number
 }
 
-interface ChartDataItem {
-  name: string
-  value: number
-}
 
 interface AccountChartProps {
   data: any[]
@@ -154,18 +150,6 @@ export function AccountChart({
     )
   }
 
-  // Definir tipo para o objeto de payload do tooltip
-  interface TooltipPayload {
-    name: string
-    value: number
-    payload?: any
-  }
-
-  interface CustomTooltipProps {
-    active?: boolean
-    payload?: TooltipPayload[]
-    label?: string
-  }
 
   return (
     <div className="w-full h-[500px]">

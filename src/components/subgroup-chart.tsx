@@ -152,8 +152,7 @@ export function SubgroupChart({
     midAngle,
     innerRadius,
     outerRadius,
-    percent,
-    index,
+    percent
   }: CustomizedLabelProps) => {
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
@@ -222,7 +221,7 @@ export function SubgroupChart({
             fill="#8884d8"
             dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
@@ -231,7 +230,7 @@ export function SubgroupChart({
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            formatter={(value, entry, index) => <span className="text-sm font-medium">{value}</span>}
+            formatter={(value, _entry, _index) => <span className="text-sm font-medium">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>

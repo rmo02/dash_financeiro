@@ -14,7 +14,7 @@ interface ExpensesChartProps {
   selectedMonths: string[]
 }
 
-export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedMonths }: ExpensesChartProps) {
+export function ExpensesChart({ data, selectedCompanies, selectedYear }: ExpensesChartProps) {
   // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
@@ -218,7 +218,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company, index) => (
+          {selectedCompanies.map((company, _index) => (
             <Bar
               key={company}
               dataKey={company}

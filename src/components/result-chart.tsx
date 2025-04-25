@@ -24,7 +24,7 @@ interface ResultChartProps {
   selectedMonths: string[]
 }
 
-export function ResultChart({ data, selectedCompanies, selectedYear, selectedMonths }: ResultChartProps) {
+export function ResultChart({ data, selectedCompanies, selectedYear }: ResultChartProps) {
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
     let filteredData = [...data]
@@ -242,7 +242,7 @@ export function ResultChart({ data, selectedCompanies, selectedYear, selectedMon
           <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
 
           {/* Renderizar uma barra ou linha para cada empresa */}
-          {selectedCompanies.map((company, index) =>
+          {selectedCompanies.map((company, _index) =>
             selectedCompanies.length > 3 ? (
               // Usar linhas quando há muitas empresas para melhor visualização
               <Line
