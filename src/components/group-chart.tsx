@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { Pie, PieChart, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import "react"
 
 // Definir tipos para os grupos financeiros
 type FinancialGroup = "RECEITA" | "DEDUCOES DE VENDAS" | "DESPESA"
@@ -25,6 +26,26 @@ interface GroupChartProps {
 }
 
 export function GroupChart({ data, selectedCompanies, selectedYear, selectedMonths }: GroupChartProps) {
+  // Adicionar este hook no início da função GroupChart, logo após a declaração das props
+  const [chartSize, setChartSize] = React.useState(120)
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth
+      if (width < 640) {
+        setChartSize(80)
+      } else if (width < 1024) {
+        setChartSize(100)
+      } else {
+        setChartSize(120)
+      }
+    }
+
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
   const chartData = useMemo(() => {
     // Filter data by selected companies and year if any
     let filteredData = [...data]
@@ -173,16 +194,16 @@ export function GroupChart({ data, selectedCompanies, selectedYear, selectedMont
   }
 
   return (
-    <div className="w-full h-[500px]">
+    <div className="w-full h-[300px] sm:h-[400px] md:h-[500px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
-            cy="50%"
+            cy="45%"
             labelLine={false}
             label={renderCustomizedLabel}
-            outerRadius={180}
+            outerRadius={chartSize}
             fill="#8884d8"
             dataKey="value"
           >
@@ -195,11 +216,11 @@ export function GroupChart({ data, selectedCompanies, selectedYear, selectedMont
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            formatter={(value) => <span className="text-sm font-medium">{value}</span>}
+            formatter={(value, _entry, _index) => <span className="text-xs sm:text-sm font-medium">{value}</span>}
+            wrapperStyle={{ fontSize: "10px", marginTop: "10px", paddingTop: "15px" }}
           />
         </PieChart>
       </ResponsiveContainer>
     </div>
   )
 }
-

@@ -85,11 +85,11 @@ export function FinancialMetrics({
     <TooltipProvider>
       {showCompanyMetrics ? (
         // Mostrar métricas separadas por empresa
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Métricas consolidadas */}
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-slate-700">Métricas Consolidadas</h3>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <h3 className="text-lg font-semibold mb-2 sm:mb-3 text-slate-700">Métricas Consolidadas</h3>
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
               <MetricCard
                 title="Receita Bruta"
                 value={grossRevenue}
@@ -285,7 +285,7 @@ export function FinancialMetrics({
         </div>
       ) : (
         // Mostrar apenas métricas consolidadas (original)
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
           <MetricCard
             title="Receita Bruta"
             value={grossRevenue}
@@ -417,27 +417,30 @@ function MetricCard({
       className={`overflow-hidden rounded-lg border-0 shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-1 bg-gradient-to-br ${gradientColor}`}
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${borderColor}`}></div>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className={`text-sm font-medium ${titleColor} flex items-center gap-1.5`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+        <CardTitle className={`text-xs sm:text-sm font-medium ${titleColor} flex items-center gap-1 sm:gap-1.5`}>
           {title}
           <Tooltip>
             <TooltipTrigger asChild>
-              <InfoIcon className={`h-4 w-4 ${tooltipIconColor} cursor-help`} />
+              <InfoIcon className={`h-3 w-3 sm:h-4 sm:w-4 ${tooltipIconColor} cursor-help`} />
             </TooltipTrigger>
             <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
               <p>{tooltipText}</p>
             </TooltipContent>
           </Tooltip>
         </CardTitle>
-        <div className={`h-8 w-8 rounded-full ${iconBgColor} p-1.5 flex items-center justify-center`}>{icon}</div>
+        <div
+          className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full ${iconBgColor} p-1 sm:p-1.5 flex items-center justify-center`}
+        >
+          {icon}
+        </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        <div className="text-2xl font-bold text-slate-800">
+      <CardContent className="pt-2 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4">
+        <div className="text-base sm:text-xl md:text-2xl font-bold text-slate-800 truncate">
           {isPercentage ? `${value.toFixed(2)}%` : formatCurrency(value)}
         </div>
-        <p className="text-xs text-slate-500 mt-1">{description}</p>
+        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{description}</p>
       </CardContent>
     </Card>
   )
 }
-

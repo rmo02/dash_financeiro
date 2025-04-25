@@ -69,36 +69,36 @@ export function DashboardTabs({
   return (
     <TooltipProvider>
       <Tabs defaultValue="revenue" className="w-full">
-        <TabsList className="grid w-full grid-cols-7 bg-slate-100 p-1 rounded-lg shadow-md">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 bg-slate-100 p-1 rounded-lg shadow-md overflow-x-auto">
           <TabsTrigger
             value="revenue"
-            className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1.5 transition-all"
+            className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1 sm:gap-1.5 transition-all px-2 py-1.5 text-xs sm:text-sm"
           >
-            <TrendingUpIcon size={16} />
+            <TrendingUpIcon size={14} className="flex-shrink-0" />
             <span className="hidden sm:inline">Receita Bruta</span>
             <span className="sm:hidden">Receita</span>
           </TabsTrigger>
           <TabsTrigger
             value="deductions"
-            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1.5 transition-all"
+            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1 sm:gap-1.5 transition-all px-2 py-1.5 text-xs sm:text-sm"
           >
-            <TrendingDownIcon size={16} />
+            <TrendingDownIcon size={14} className="flex-shrink-0" />
             <span className="hidden sm:inline">Deduções</span>
             <span className="sm:hidden">Deduções</span>
           </TabsTrigger>
           <TabsTrigger
             value="expenses"
-            className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1.5 transition-all"
+            className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1 sm:gap-1.5 transition-all px-2 py-1.5 text-xs sm:text-sm"
           >
-            <TrendingDownIcon size={16} />
+            <TrendingDownIcon size={14} className="flex-shrink-0" />
             <span className="hidden sm:inline">Despesas</span>
             <span className="sm:hidden">Despesas</span>
           </TabsTrigger>
           <TabsTrigger
             value="result"
-            className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1.5 transition-all"
+            className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-md rounded-md flex items-center gap-1 sm:gap-1.5 transition-all px-2 py-1.5 text-xs sm:text-sm"
           >
-            <BarChart3Icon size={16} />
+            <BarChart3Icon size={14} className="flex-shrink-0" />
             <span className="hidden sm:inline">Resultado</span>
             <span className="sm:hidden">Resultado</span>
           </TabsTrigger>
@@ -129,21 +129,23 @@ export function DashboardTabs({
         </TabsList>
 
         {/* Receita Bruta */}
-        <TabsContent value="revenue" className="mt-6">
+        <TabsContent value="revenue" className="mt-4 sm:mt-6">
           <Card className="overflow-hidden rounded-lg border-0 shadow-lg bg-gradient-to-br from-white to-blue-50">
             <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-            <CardHeader className="border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-blue-100 p-2 flex items-center justify-center">
-                    <TrendingUpIcon className="h-5 w-5 text-blue-600" />
+            <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-blue-100 p-1.5 sm:p-2 flex items-center justify-center">
+                    <TrendingUpIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <CardTitle className="text-blue-700">Receita Bruta Mensal</CardTitle>
+                    <div className="flex items-center gap-1 sm:gap-1.5">
+                      <CardTitle className="text-sm sm:text-base md:text-lg text-blue-700">
+                        Receita Bruta Mensal
+                      </CardTitle>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <InfoIcon className="h-4 w-4 text-blue-400 cursor-help" />
+                          <InfoIcon className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
                           <p>
@@ -158,7 +160,7 @@ export function DashboardTabs({
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Receita bruta por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (todos os
                       meses)
                     </CardDescription>
@@ -166,13 +168,15 @@ export function DashboardTabs({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              <RevenueChart
-                data={data}
-                selectedCompanies={selectedCompanies}
-                selectedYear={selectedYear}
-                selectedMonths={selectedMonths}
-              />
+            <CardContent className="p-2 sm:p-4 md:p-6 overflow-x-auto">
+              <div className="min-w-[300px]">
+                <RevenueChart
+                  data={data}
+                  selectedCompanies={selectedCompanies}
+                  selectedYear={selectedYear}
+                  selectedMonths={selectedMonths}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

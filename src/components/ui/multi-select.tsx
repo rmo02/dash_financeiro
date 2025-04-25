@@ -104,7 +104,7 @@ export function MultiSelect({
               {selected.length === options.length ? "Desmarcar todos" : "Selecionar todos"}
             </Button>
           </div>
-          <ScrollArea className="max-h-60">
+          <ScrollArea className="">
             <CommandList>
               <CommandGroup>
                 {options.map((option) => (

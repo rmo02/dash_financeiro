@@ -91,15 +91,15 @@ export function Filters({
     <TooltipProvider>
       <Card className="overflow-hidden rounded-lg border-0 shadow-lg bg-gradient-to-br from-white to-purple-50">
         <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-        <CardHeader className="border-b cursor-pointer" onClick={toggleExpansion}>
+        <CardHeader className="border-b cursor-pointer p-3 sm:p-4" onClick={toggleExpansion}>
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-purple-100 p-2 flex items-center justify-center">
-                <Filter size={18} className="text-purple-600" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-purple-100 p-1.5 sm:p-2 flex items-center justify-center">
+                <Filter size={16} className="text-purple-600" />
               </div>
-              <CardTitle className="text-purple-700">Filtros</CardTitle>
+              <CardTitle className="text-sm sm:text-base text-purple-700">Filtros</CardTitle>
               <ChevronDown
-                size={18}
+                size={16}
                 className={`text-purple-500 transition-transform duration-300 ${isExpanded ? "rotate-180" : "rotate-0"}`}
               />
             </div>
@@ -116,7 +116,8 @@ export function Filters({
                     className="text-xs flex items-center gap-1.5 border-purple-200 hover:bg-purple-50 hover:text-purple-700 transition-colors"
                   >
                     <RefreshCw size={14} />
-                    Resetar Filtros
+                    <span className="hidden sm:inline">Resetar Filtros</span>
+                    <span className="sm:hidden">Resetar</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-white shadow-lg border border-gray-100 p-3 rounded-lg text-gray-700">
@@ -133,8 +134,8 @@ export function Filters({
             isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
                   <Building size={15} className="text-purple-500" />
@@ -178,7 +179,7 @@ export function Filters({
                   onChange={setSelectedMonths}
                   placeholder="Selecione os meses"
                   className="bg-white border-slate-200 hover:border-purple-300 transition-colors focus:ring-purple-200"
-                  badgeClassName="bg-purple-100 text-purple-700"
+                  badgeClassName="bg-purple-100 text-purple-700 text-xs"
                   emptyMessage="Nenhum mês encontrado"
                 />
               </div>
@@ -219,4 +220,3 @@ export function Filters({
     </TooltipProvider>
   )
 }
-

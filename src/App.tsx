@@ -35,21 +35,21 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto py-10 px-4">
-        <div className="flex flex-col space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="container mx-auto py-4 sm:py-6 md:py-10 px-3 sm:px-4 max-w-[1600px]">
+        <div className="flex flex-col space-y-4 sm:space-y-6 md:space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">Dashboard Financeiro</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Dashboard Financeiro</h1>
               {fileName && (
-                <p className="text-sm text-slate-500 mt-1 flex items-center">
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 flex items-center">
                   <FileSpreadsheet size={16} className="mr-1" />
                   {fileName}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto mt-3 md:mt-0">
               <Button
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white w-full md:w-auto"
                 disabled={isLoading}
               >
                 <Upload size={16} />
@@ -120,4 +120,3 @@ function App() {
 }
 
 export default App
-

@@ -183,9 +183,9 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
   }
 
   return (
-    <div className="w-full h-[500px]">
+    <div className="w-full h-[300px] sm:h-[400px] md:h-[500px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+        <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
           <XAxis
             dataKey="month"
@@ -193,14 +193,14 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
             textAnchor="end"
             height={60}
             tickMargin={20}
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#666", fontSize: 10 }}
             axisLine={{ stroke: "#e0e0e0" }}
             tickFormatter={(value) => monthNames[value as MonthAbbr] || value}
           />
           <YAxis
             tickFormatter={(value) => formatCurrency(value)}
             domain={[0, maxExpense * 1.1]} // Add 10% padding to the top
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#666", fontSize: 10 }}
             axisLine={{ stroke: "#e0e0e0" }}
           />
           <Tooltip
@@ -215,7 +215,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
               padding: "10px",
             }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />
 
           {/* Renderizar uma barra para cada empresa */}
           {selectedCompanies.map((company, _index) => (

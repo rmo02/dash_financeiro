@@ -10,7 +10,6 @@ interface AccountData {
   originalValue: number
 }
 
-
 interface AccountChartProps {
   data: any[]
   selectedCompanies: string[]
@@ -150,24 +149,24 @@ export function AccountChart({
     )
   }
 
-
   return (
-    <div className="w-full h-[500px]">
+    <div className="w-full h-[300px] sm:h-[400px] md:h-[500px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart layout="vertical" data={chartData} margin={{ top: 20, right: 30, left: 150, bottom: 20 }}>
+        <BarChart layout="vertical" data={chartData} margin={{ top: 20, right: 20, left: 100, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e0e0e0" />
           <XAxis
             type="number"
             tickFormatter={(value) => formatCurrency(value)}
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#666", fontSize: 10 }}
             axisLine={{ stroke: "#e0e0e0" }}
           />
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#666", fontSize: 9 }}
             axisLine={{ stroke: "#e0e0e0" }}
-            width={140}
+            width={90}
+            tickFormatter={(value) => (value.length > 15 ? `${value.substring(0, 15)}...` : value)}
           />
           <Tooltip
             formatter={(value: number) => [formatCurrency(value), "Valor"]}
@@ -179,8 +178,8 @@ export function AccountChart({
               padding: "10px",
             }}
           />
-          <Legend />
-          <Bar dataKey="value" name="Valor" radius={[0, 4, 4, 0]} barSize={25}>
+          <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />
+          <Bar dataKey="value" name="Valor" radius={[0, 4, 4, 0]} barSize={20}>
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getBarColor(entry.value)} />
             ))}
