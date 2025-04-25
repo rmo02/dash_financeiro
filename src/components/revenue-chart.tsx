@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
-// Adicionar uma definição de tipo para as abreviações de mês no início do arquivo, logo após as importações
+// Modificar a definição do tipo MonthAbbr para garantir que todos os meses sejam reconhecidos corretamente
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
 interface RevenueChartProps {
@@ -81,16 +81,16 @@ export function RevenueChart({ data, selectedCompanies, selectedYear, selectedMo
       }
     })
 
-    // Define month order for sorting
+    // Garantir que o array monthOrder inclua todos os meses na ordem correta
     const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-    // Convert to array format for chart
+    // Certificar-se de que o resultado do chartData inclua todos os meses, mesmo sem dados
     const result = monthOrder.map((month) => {
       const monthData: any = { month }
 
       // Adicionar dados de cada empresa
       selectedCompanies.forEach((company) => {
-        monthData[company] = companiesData[company][month]
+        monthData[company] = companiesData[company][month] || 0
       })
 
       return monthData

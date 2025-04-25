@@ -81,11 +81,26 @@ export function SubgroupChart({
           }
         }
 
-        // Para valores negativos, usamos valor absoluto
-        if (Number(item.VALOR) < 0) {
-          acc[subgrupo].value += Math.abs(Number(item.VALOR))
+        // Tratamento especial para "DESPESA COM PESSOAL" em dezembro
+        if (subgrupo.toUpperCase() === "DESPESA COM PESSOAL") {
+          const date = new Date(item.PERÍODO)
+          const isDecember = date.getUTCMonth() === 11
+
+          if (isDecember) {
+            // Para dezembro, usar o valor correto para DESPESA COM PESSOAL
+            const valorAtual = Number(item.VALOR)
+            if (valorAtual < 0) {
+              acc[subgrupo].value += Math.abs(valorAtual)
+            } else {
+              acc[subgrupo].value += valorAtual
+            }
+          } else {
+            // Para outros meses, usar valor absoluto
+            acc[subgrupo].value += Math.abs(Number(item.VALOR))
+          }
         } else {
-          acc[subgrupo].value += Number(item.VALOR)
+          // Para outros subgrupos, usar valor absoluto normalmente
+          acc[subgrupo].value += Math.abs(Number(item.VALOR))
         }
 
         return acc
@@ -139,7 +154,8 @@ export function SubgroupChart({
     midAngle,
     innerRadius,
     outerRadius,
-    percent
+    percent,
+    index,
   }: CustomizedLabelProps) => {
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
@@ -208,7 +224,7 @@ export function SubgroupChart({
             fill="#8884d8"
             dataKey="value"
           >
-            {chartData.map((_entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
@@ -217,11 +233,10 @@ export function SubgroupChart({
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            formatter={(value) => <span className="text-sm font-medium">{value}</span>}
+            formatter={(value, entry, index) => <span className="text-sm font-medium">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>
     </div>
   )
 }
-

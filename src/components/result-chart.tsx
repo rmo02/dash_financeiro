@@ -14,6 +14,7 @@ import {
   ComposedChart,
 } from "recharts"
 
+// Modificar a definição do tipo MonthAbbr para garantir que todos os meses sejam reconhecidos corretamente
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
 interface ResultChartProps {
@@ -23,7 +24,7 @@ interface ResultChartProps {
   selectedMonths: string[]
 }
 
-export function ResultChart({ data, selectedCompanies, selectedYear }: ResultChartProps) {
+export function ResultChart({ data, selectedCompanies, selectedYear, selectedMonths }: ResultChartProps) {
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
     let filteredData = [...data]
@@ -88,25 +89,36 @@ export function ResultChart({ data, selectedCompanies, selectedYear }: ResultCha
       ]
       const monthAbbr = monthAbbrArray[monthIndex]
 
+      // Verificar se o mês é dezembro para tratamento especial
+      const isDecember = monthIndex === 11
+      const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
       if (item.GRUPO === "RECEITA") {
         companiesData[item.CIA][monthAbbr].revenue += Number(item.VALOR)
       } else if (item.GRUPO === "DEDUCOES DE VENDAS") {
         companiesData[item.CIA][monthAbbr].deductions += Number(item.VALOR) // Já é negativo
       } else if (item.GRUPO === "DESPESA") {
-        companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR) // Já é negativo
+        // Verificar se é DESPESA COM PESSOAL em dezembro
+        if (isDecember && isPersonnelExpense) {
+          // Usar o valor exato para dezembro e DESPESA COM PESSOAL
+          companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR)
+        } else {
+          // Para outros casos, continuar usando o valor normal
+          companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR) // Já é negativo
+        }
       }
     })
 
-    // Define month order for sorting
+    // Garantir que o array monthOrder inclua todos os meses na ordem correta
     const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-    // Convert to array format for chart
+    // Certificar-se de que o resultado do chartData inclua todos os meses, mesmo sem dados
     const result = monthOrder.map((month) => {
       const monthData: any = { month }
 
       // Adicionar dados de cada empresa
       selectedCompanies.forEach((company) => {
-        const companyData = companiesData[company][month]
+        const companyData = companiesData[company][month] || { revenue: 0, deductions: 0, expenses: 0 }
         // Calcular o resultado líquido para cada empresa
         monthData[company] = companyData.revenue + companyData.deductions + companyData.expenses
       })
@@ -227,7 +239,7 @@ export function ResultChart({ data, selectedCompanies, selectedYear }: ResultCha
           <ReferenceLine y={0} stroke="#666" strokeWidth={1} />
 
           {/* Renderizar uma barra ou linha para cada empresa */}
-          {selectedCompanies.map((company) =>
+          {selectedCompanies.map((company, index) =>
             selectedCompanies.length > 3 ? (
               // Usar linhas quando há muitas empresas para melhor visualização
               <Line

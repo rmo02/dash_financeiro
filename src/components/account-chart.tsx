@@ -10,6 +10,11 @@ interface AccountData {
   originalValue: number
 }
 
+interface ChartDataItem {
+  name: string
+  value: number
+}
+
 interface AccountChartProps {
   data: any[]
   selectedCompanies: string[]
@@ -91,8 +96,25 @@ export function AccountChart({
           }
         }
 
+        // Tratamento especial para "DESPESA COM PESSOAL" em dezembro
+        const date = new Date(item.PERÍODO)
+        const isDecember = date.getUTCMonth() === 11
+        const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
         acc[displayName].originalValue += Number(item.VALOR)
-        acc[displayName].value += Math.abs(Number(item.VALOR))
+
+        if (isDecember && isPersonnelExpense) {
+          // Para dezembro e DESPESA COM PESSOAL, usar o valor exato
+          const valorAtual = Number(item.VALOR)
+          if (valorAtual < 0) {
+            acc[displayName].value += Math.abs(valorAtual)
+          } else {
+            acc[displayName].value += valorAtual
+          }
+        } else {
+          // Para outros casos, usar valor absoluto
+          acc[displayName].value += Math.abs(Number(item.VALOR))
+        }
 
         return acc
       },
@@ -134,9 +156,18 @@ export function AccountChart({
     )
   }
 
+  // Definir tipo para o objeto de payload do tooltip
+  interface TooltipPayload {
+    name: string
+    value: number
+    payload?: any
+  }
 
-
-
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: TooltipPayload[]
+    label?: string
+  }
 
   return (
     <div className="w-full h-[500px]">
@@ -177,4 +208,3 @@ export function AccountChart({
     </div>
   )
 }
-

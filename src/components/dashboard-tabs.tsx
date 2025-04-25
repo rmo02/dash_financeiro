@@ -159,8 +159,8 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Receita bruta por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (
-                      {formatMonths()})
+                      Receita bruta por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (todos os
+                      meses)
                     </CardDescription>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Deduções por mês para {formatCompanies()} em {selectedYear || "todos os anos"} ({formatMonths()})
+                      Deduções por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (todos os meses)
                     </CardDescription>
                   </div>
                 </div>
@@ -256,7 +256,7 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Despesas por mês para {formatCompanies()} em {selectedYear || "todos os anos"} ({formatMonths()})
+                      Despesas por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (todos os meses)
                     </CardDescription>
                   </div>
                 </div>
@@ -306,8 +306,8 @@ export function DashboardTabs({
                       </Tooltip>
                     </div>
                     <CardDescription>
-                      Resultado líquido por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (
-                      {formatMonths()})
+                      Resultado líquido por mês para {formatCompanies()} em {selectedYear || "todos os anos"} (todos os
+                      meses)
                     </CardDescription>
                   </div>
                 </div>
@@ -474,4 +474,3 @@ export function DashboardTabs({
     </TooltipProvider>
   )
 }
-

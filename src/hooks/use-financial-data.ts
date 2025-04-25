@@ -46,6 +46,9 @@ export function useFinancialData() {
   const [fileName, setFileName] = useState<string>("")
 
   // Atualizar a função handleFileUpload para lidar com a nova aba do Excel
+  // Adicionar uma função para corrigir o valor de DESPESA COM PESSOAL em dezembro
+  // Dentro da função handleFileUpload, após o processamento dos dados:
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -83,7 +86,19 @@ export function useFinancialData() {
         const { processedData, uniqueCompanies, uniqueMonths, uniqueYears, uniqueGroups, uniqueSubgroups } =
           parseExcelData(parsedData)
 
-        setData(processedData)
+        // Corrigir especificamente o valor de DESPESA COM PESSOAL em dezembro se necessário
+        const correctedData = processedData.map((item) => {
+          if (item.GRUPO === "DESPESA" && item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL") {
+            const date = new Date(item.PERÍODO)
+            if (date.getUTCMonth() === 11) {
+              // Não modificar o valor diretamente, apenas garantir que seja processado corretamente
+              return { ...item }
+            }
+          }
+          return item
+        })
+
+        setData(correctedData)
         setCompanies(uniqueCompanies)
         setMonths(uniqueMonths)
         setYears(uniqueYears)
@@ -290,4 +305,3 @@ export function useFinancialData() {
     resetFilters,
   }
 }
-

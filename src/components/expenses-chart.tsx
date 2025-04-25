@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
-// Adicionar uma definição de tipo para as abreviações de mês no início do arquivo, logo após as importações
+// Modificar a definição do tipo MonthAbbr para garantir que todos os meses sejam reconhecidos corretamente
 type MonthAbbr = "jan" | "fev" | "mar" | "abr" | "mai" | "jun" | "jul" | "ago" | "set" | "out" | "nov" | "dez"
 
 // Atualizar a interface ExpensesChartProps para remover selectedGroups e selectedSubgroups
@@ -14,8 +14,8 @@ interface ExpensesChartProps {
   selectedMonths: string[]
 }
 
-export function ExpensesChart({ data, selectedCompanies, selectedYear }: ExpensesChartProps) {
-  // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
+export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedMonths }: ExpensesChartProps) {
+  // Adicionar console.logs para depurar o problema com DESPESA COM PESSOAL em dezembro
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
     let filteredData = [...data]
@@ -54,6 +54,33 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
       companiesData[company] = { ...monthsTemplate }
     })
 
+    // Filtrar apenas registros de DESPESA COM PESSOAL em dezembro para depuração
+    const decemberPersonnelExpenses = filteredData.filter((item) => {
+      const date = new Date(item.PERÍODO)
+      const isDecember = date.getUTCMonth() === 11
+      const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+      return isDecember && isPersonnelExpense && selectedCompanies.includes(item.CIA)
+    })
+
+    console.log("=== DESPESA COM PESSOAL EM DEZEMBRO (REGISTROS INDIVIDUAIS) ===")
+    decemberPersonnelExpenses.forEach((item, index) => {
+      console.log(`Registro #${index + 1}:`, {
+        empresa: item.CIA,
+        data: new Date(item.PERÍODO).toISOString(),
+        subgrupo: item.SUBGRUPO,
+        conta: item["NOME CONTA"],
+        valor: item.VALOR,
+        valorAbsoluto: Math.abs(Number(item.VALOR)),
+      })
+    })
+
+    // Calcular a soma total para verificação
+    const totalDecemberPersonnel = decemberPersonnelExpenses.reduce(
+      (sum, item) => sum + Math.abs(Number(item.VALOR)),
+      0,
+    )
+    console.log("Soma total de DESPESA COM PESSOAL em dezembro:", totalDecemberPersonnel)
+
     // Group by month and calculate expenses for each company
     filteredData.forEach((item) => {
       // Apenas despesas do grupo DESPESA para empresas selecionadas
@@ -77,21 +104,48 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
         ]
         const monthAbbr = monthAbbrArray[monthIndex]
 
-        // Adicionar ao valor da empresa específica (valor absoluto)
-        companiesData[item.CIA][monthAbbr] += Math.abs(Number(item.VALOR))
+        // Verificar se é dezembro e o subgrupo é "DESPESA COM PESSOAL"
+        const isDecember = monthIndex === 11
+        const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
+        if (isDecember && isPersonnelExpense) {
+          // Registrar o valor antes de adicionar
+          const valorAntes = companiesData[item.CIA][monthAbbr]
+          const valorAtual = Number(item.VALOR)
+          const valorAdicionar = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+
+          companiesData[item.CIA][monthAbbr] += valorAdicionar
+
+          // Registrar o valor depois de adicionar
+          console.log(`Adicionando valor para ${item.CIA} em dezembro:`, {
+            conta: item["NOME CONTA"],
+            valorAntes,
+            valorAtual,
+            valorAdicionar,
+            valorDepois: companiesData[item.CIA][monthAbbr],
+          })
+        } else {
+          // Para outros casos, continuar usando o valor absoluto
+          companiesData[item.CIA][monthAbbr] += Math.abs(Number(item.VALOR))
+        }
       }
     })
 
-    // Define month order for sorting
+    // Exibir o resultado final para dezembro
+    selectedCompanies.forEach((company) => {
+      console.log(`Valor final de DESPESA COM PESSOAL em dezembro para ${company}:`, companiesData[company].dez)
+    })
+
+    // Garantir que o array monthOrder inclua todos os meses na ordem correta
     const monthOrder: MonthAbbr[] = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-    // Convert to array format for chart
+    // Certificar-se de que o resultado do chartData inclua todos os meses, mesmo sem dados
     const result = monthOrder.map((month) => {
       const monthData: any = { month }
 
       // Adicionar dados de cada empresa
       selectedCompanies.forEach((company) => {
-        monthData[company] = companiesData[company][month]
+        monthData[company] = companiesData[company][month] || 0
       })
 
       return monthData
@@ -206,7 +260,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear }: Expense
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company, ) => (
+          {selectedCompanies.map((company, index) => (
             <Bar
               key={company}
               dataKey={company}

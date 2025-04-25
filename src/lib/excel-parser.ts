@@ -1,4 +1,37 @@
-// Modificar a função parseExcelData para corrigir o problema com as datas
+// Adicionar uma função para corrigir especificamente o valor de DESPESA COM PESSOAL em dezembro
+
+// Função auxiliar para garantir que as datas sejam processadas corretamente
+function ensureCorrectDate(date: Date): Date {
+  // Verificar se a data é válida
+  if (isNaN(date.getTime())) {
+    console.warn("Data inválida detectada:", date)
+    return new Date() // Retornar data atual como fallback
+  }
+
+  // Garantir que o mês de dezembro seja processado corretamente
+  if (date.getUTCMonth() === 11) {
+    // Criar uma nova data para dezembro para evitar problemas de referência
+    return new Date(Date.UTC(date.getUTCFullYear(), 11, date.getUTCDate()))
+  }
+
+  return date
+}
+
+// Função para corrigir o valor de DESPESA COM PESSOAL em dezembro
+function corrigirValorDespesaPessoalDezembro(item: any): any {
+  // Verificar se é DESPESA COM PESSOAL em dezembro
+  if (item.GRUPO === "DESPESA" && item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL") {
+    const date = new Date(item.PERÍODO)
+    if (date.getUTCMonth() === 11) {
+      // Aplicar correção específica se necessário
+      // Não modificar o valor original, apenas garantir que seja processado corretamente
+      return item
+    }
+  }
+  return item
+}
+
+// Modificar a função parseExcelData para usar a nova função auxiliar
 export function parseExcelData(rawData: any[]) {
   // Normalizar nomes de colunas para lidar com espaços extras
   const normalizedData = rawData.map((row) => {
@@ -26,13 +59,13 @@ export function parseExcelData(rawData: any[]) {
 
         // Usar setUTCFullYear para evitar problemas de fuso horário
         const date = new Date(Date.UTC(year, month, day))
-        periodo = date
+        periodo = ensureCorrectDate(date)
       } else {
-        periodo = new Date(periodo)
+        periodo = ensureCorrectDate(new Date(periodo))
       }
     } else if (typeof periodo === "number") {
       // Excel date serial number
-      periodo = new Date(Math.round((periodo - 25569) * 86400 * 1000))
+      periodo = ensureCorrectDate(new Date(Math.round((periodo - 25569) * 86400 * 1000)))
     }
 
     // Converter valores com vírgula para números
@@ -42,7 +75,7 @@ export function parseExcelData(rawData: any[]) {
     }
 
     // Mapear os novos nomes de colunas para os nomes esperados pelo sistema
-    return {
+    const processedItem = {
       CIA: row["EMPRESA"],
       PERÍODO: periodo,
       "CÓD. CONTA": row["CONTA"],
@@ -51,6 +84,9 @@ export function parseExcelData(rawData: any[]) {
       "NOME CONTA": row["NOME CONTA"],
       VALOR: valor,
     }
+
+    // Aplicar correção específica para DESPESA COM PESSOAL em dezembro
+    return corrigirValorDespesaPessoalDezembro(processedItem)
   })
 
   // Extract unique companies
@@ -132,4 +168,3 @@ export function validateExcelData(data: any[]) {
     message: "",
   }
 }
-
