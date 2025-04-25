@@ -13,7 +13,7 @@ interface RevenueChartProps {
   selectedMonths: string[]
 }
 
-export function RevenueChart({ data, selectedCompanies, selectedYear, selectedMonths }: RevenueChartProps) {
+export function RevenueChart({ data, selectedCompanies, selectedYear }: RevenueChartProps) {
   // Modificar a parte do código que pode estar causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
@@ -205,7 +205,7 @@ export function RevenueChart({ data, selectedCompanies, selectedYear, selectedMo
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company, index) => (
+          {selectedCompanies.map((company) => (
             <Bar
               key={company}
               dataKey={company}

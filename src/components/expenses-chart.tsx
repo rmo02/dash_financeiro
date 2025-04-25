@@ -14,7 +14,7 @@ interface ExpensesChartProps {
   selectedMonths: string[]
 }
 
-export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedMonths }: ExpensesChartProps) {
+export function ExpensesChart({ data, selectedCompanies, selectedYear }: ExpensesChartProps) {
   // Adicionar console.logs para depurar o problema com DESPESA COM PESSOAL em dezembro
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
@@ -260,7 +260,7 @@ export function ExpensesChart({ data, selectedCompanies, selectedYear, selectedM
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company, index) => (
+          {selectedCompanies.map((company) => (
             <Bar
               key={company}
               dataKey={company}

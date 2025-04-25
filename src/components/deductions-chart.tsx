@@ -13,7 +13,7 @@ interface DeductionsChartProps {
   selectedMonths: string[]
 }
 
-export function DeductionsChart({ data, selectedCompanies, selectedYear, selectedMonths }: DeductionsChartProps) {
+export function DeductionsChart({ data, selectedCompanies, selectedYear }: DeductionsChartProps) {
   // Modificar a parte do código que está causando o erro, dentro da função useMemo
   const chartData = useMemo(() => {
     // Filter data by selected year only (ignore selectedMonths for this chart)
@@ -205,7 +205,7 @@ export function DeductionsChart({ data, selectedCompanies, selectedYear, selecte
           <Legend />
 
           {/* Renderizar uma barra para cada empresa */}
-          {selectedCompanies.map((company, index) => (
+          {selectedCompanies.map((company) => (
             <Bar
               key={company}
               dataKey={company}
