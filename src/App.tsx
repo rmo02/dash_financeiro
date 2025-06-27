@@ -34,34 +34,6 @@ function App() {
     companyMetrics,
   } = useFinancialData()
 
-  // Função para formatar os filtros selecionados para exibição
-  const getActiveFiltersText = () => {
-    const filters = []
-
-    if (selectedCompanies.length > 0) {
-      filters.push(
-        `Empresas: ${selectedCompanies.length === 1 ? selectedCompanies[0] : `${selectedCompanies.length} selecionadas`}`,
-      )
-    }
-
-    if (selectedYear) {
-      filters.push(`Ano: ${selectedYear}`)
-    }
-
-    if (selectedMonths.length > 0) {
-      filters.push(`Meses: ${selectedMonths.length} selecionados`)
-    }
-
-    if (selectedGroups.length > 0) {
-      filters.push(`Grupos: ${selectedGroups.length} selecionados`)
-    }
-
-    if (selectedSubgroups.length > 0) {
-      filters.push(`Subgrupos: ${selectedSubgroups.length} selecionados`)
-    }
-
-    return filters.join(" | ")
-  }
 
   return (
     <div className="min-h-screen bg-slate-50">
