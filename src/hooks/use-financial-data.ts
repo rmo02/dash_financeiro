@@ -123,6 +123,28 @@ export function useFinancialData() {
     reader.readAsBinaryString(file)
   }
 
+  // Função auxiliar para calcular despesas com tratamento especial para dezembro
+  const calculateExpenses = (filteredData: any[]) => {
+    return filteredData
+      .filter((item) => item.GRUPO === "DESPESA")
+      .reduce((sum, item) => {
+        const date = new Date(item.PERÍODO)
+        const isDecember = date.getUTCMonth() === 11
+        const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
+        if (isDecember && isPersonnelExpense) {
+          // Aplicar o mesmo tratamento especial usado nos gráficos
+          const valorAtual = Number(item.VALOR)
+          // Se for negativo, usar o valor absoluto; se for positivo, usar o valor como está
+          const valorAdicionar = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+          return sum - valorAdicionar // Subtrair porque despesas reduzem o resultado
+        } else {
+          // Para outros casos, usar o valor original (que já pode ser negativo)
+          return sum + Number(item.VALOR)
+        }
+      }, 0)
+  }
+
   // Apply filters and update metrics whenever selections change
   useEffect(() => {
     if (data.length > 0) {
@@ -191,10 +213,8 @@ export function useFinancialData() {
       // Receita líquida = Receita bruta + Deduções (deduções já são negativas)
       const netRevenue = grossRevenue + deductions
 
-      // Despesas (GRUPO = DESPESA)
-      const expenses = filtered
-        .filter((item) => item.GRUPO === "DESPESA")
-        .reduce((sum, item) => sum + Number(item.VALOR), 0) // Já são valores negativos
+      // Despesas (GRUPO = DESPESA) - usando a função auxiliar para tratamento especial
+      const expenses = calculateExpenses(filtered)
 
       // Resultado líquido = Receita líquida + Despesas (despesas já são negativas)
       const netResult = netRevenue + expenses
@@ -232,10 +252,8 @@ export function useFinancialData() {
           // Receita líquida = Receita bruta + Deduções (deduções já são negativas)
           const companyNetRevenue = companyGrossRevenue + companyDeductions
 
-          // Despesas (GRUPO = DESPESA)
-          const companyExpenses = companyData
-            .filter((item) => item.GRUPO === "DESPESA")
-            .reduce((sum, item) => sum + Number(item.VALOR), 0) // Já são valores negativos
+          // Despesas (GRUPO = DESPESA) - usando a função auxiliar para tratamento especial
+          const companyExpenses = calculateExpenses(companyData)
 
           // Resultado líquido = Receita líquida + Despesas (despesas já são negativas)
           const companyNetResult = companyNetRevenue + companyExpenses

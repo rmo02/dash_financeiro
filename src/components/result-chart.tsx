@@ -98,16 +98,15 @@ export function ResultChart({ data, selectedCompanies, selectedYear }: ResultCha
       } else if (item.GRUPO === "DEDUCOES DE VENDAS") {
         companiesData[item.CIA][monthAbbr].deductions += Number(item.VALOR) // Já é negativo
       } else if (item.GRUPO === "DESPESA") {
-        // Verificar se é DESPESA COM PESSOAL em dezembro
+        // Aplicar o mesmo tratamento especial usado nas métricas
         if (isDecember && isPersonnelExpense) {
-          // Usar o valor considerando o sinal
           const valorAtual = Number(item.VALOR)
           // Se for negativo, usar o valor absoluto; se for positivo, usar o valor como está
           const valorAdicionar = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
-          companiesData[item.CIA][monthAbbr].expenses += valorAdicionar
+          companiesData[item.CIA][monthAbbr].expenses -= valorAdicionar // Subtrair porque despesas reduzem o resultado
         } else {
-          // Para outros casos, continuar usando o valor normal
-          companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR) // Já é negativo
+          // Para outros casos, usar o valor original
+          companiesData[item.CIA][monthAbbr].expenses += Number(item.VALOR)
         }
       }
     })
