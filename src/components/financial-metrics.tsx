@@ -25,6 +25,7 @@ interface FinancialMetricsProps {
   companyMetrics?: Record<string, CompanyMetrics>
   selectedGroups?: string[]
   selectedSubgroups?: string[]
+  filteredData?: any[] // Adicionar dados filtrados para calcular breakdowns
 }
 
 export function FinancialMetrics({
@@ -33,8 +34,106 @@ export function FinancialMetrics({
   companyMetrics = {},
   selectedGroups = [],
   selectedSubgroups = [],
+  filteredData = [],
 }: FinancialMetricsProps) {
   const { grossRevenue, deductions, netRevenue, expenses, netResult, netMargin } = metrics
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value)
+  }
+
+  // Função para calcular breakdown da receita bruta (principais subgrupos)
+  const getRevenueBreakdown = () => {
+    const revenueData = filteredData.filter((item) => item.GRUPO === "RECEITA")
+    const subgroupTotals: Record<string, number> = {}
+
+    revenueData.forEach((item) => {
+      const subgroup = item.SUBGRUPO || "Outros"
+      subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + Number(item.VALOR)
+    })
+
+    // Ordenar por valor e pegar os top 3
+    const sortedSubgroups = Object.entries(subgroupTotals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+
+    return sortedSubgroups.map(([label, value]) => ({ label, value }))
+  }
+
+  // Função para calcular breakdown das deduções
+  const getDeductionsBreakdown = () => {
+    const deductionsData = filteredData.filter((item) => item.GRUPO === "DEDUCOES DE VENDAS")
+    const subgroupTotals: Record<string, number> = {}
+
+    deductionsData.forEach((item) => {
+      const subgroup = item.SUBGRUPO || "Outros"
+      subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + Math.abs(Number(item.VALOR))
+    })
+
+    // Ordenar por valor e pegar os top 3
+    const sortedSubgroups = Object.entries(subgroupTotals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+
+    return sortedSubgroups.map(([label, value]) => ({ label, value }))
+  }
+
+  // Função para calcular breakdown da receita líquida
+  const getNetRevenueBreakdown = () => {
+    return [
+      { label: "Receita Bruta", value: grossRevenue },
+      { label: "Deduções", value: deductions, isSubtraction: true },
+    ]
+  }
+
+  // Função para calcular breakdown das despesas
+  const getExpensesBreakdown = () => {
+    const expensesData = filteredData.filter((item) => item.GRUPO === "DESPESA")
+    const subgroupTotals: Record<string, number> = {}
+
+    expensesData.forEach((item) => {
+      const subgroup = item.SUBGRUPO || "Outros"
+      const date = new Date(item.PERÍODO)
+      const isDecember = date.getUTCMonth() === 11
+      const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
+      let valueToAdd = 0
+      if (isDecember && isPersonnelExpense) {
+        const valorAtual = Number(item.VALOR)
+        valueToAdd = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+      } else {
+        valueToAdd = Math.abs(Number(item.VALOR))
+      }
+
+      subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + valueToAdd
+    })
+
+    // Ordenar por valor e pegar os top 3
+    const sortedSubgroups = Object.entries(subgroupTotals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+
+    return sortedSubgroups.map(([label, value]) => ({ label, value }))
+  }
+
+  // Função para calcular breakdown do resultado líquido
+  const getNetResultBreakdown = () => {
+    return [
+      { label: "Receita Líquida", value: netRevenue },
+      { label: "Despesas", value: Math.abs(expenses), isSubtraction: true },
+    ]
+  }
+
+  // Função para calcular breakdown da margem líquida
+  const getNetMarginBreakdown = () => {
+    return [
+      { label: `Resultado: ${formatCurrency(netResult)}`, value: netResult },
+      { label: `÷ Rec. Líquida: ${formatCurrency(Math.abs(netRevenue))}`, value: Math.abs(netRevenue) },
+    ]
+  }
 
   // Determinar se devemos mostrar métricas por empresa ou métricas consolidadas
   const showCompanyMetrics = selectedCompanies?.length > 1 && Object.keys(companyMetrics || {}).length > 0
@@ -101,6 +200,7 @@ export function FinancialMetrics({
                 tooltipIconColor="text-blue-400"
                 gradientColor="from-white to-blue-50"
                 borderColor="bg-blue-500"
+                breakdown={getRevenueBreakdown()}
               />
               <MetricCard
                 title="Deduções"
@@ -113,6 +213,7 @@ export function FinancialMetrics({
                 tooltipIconColor="text-amber-400"
                 gradientColor="from-white to-amber-50"
                 borderColor="bg-amber-500"
+                breakdown={getDeductionsBreakdown()}
               />
               <MetricCard
                 title="Receita Líquida"
@@ -125,6 +226,7 @@ export function FinancialMetrics({
                 tooltipIconColor="text-indigo-400"
                 gradientColor="from-white to-indigo-50"
                 borderColor="bg-indigo-500"
+                breakdown={getNetRevenueBreakdown()}
               />
               <MetricCard
                 title="Despesas"
@@ -137,6 +239,7 @@ export function FinancialMetrics({
                 tooltipIconColor="text-red-400"
                 gradientColor="from-white to-red-50"
                 borderColor="bg-red-500"
+                breakdown={getExpensesBreakdown()}
               />
               <MetricCard
                 title="Resultado Líquido"
@@ -155,6 +258,7 @@ export function FinancialMetrics({
                 tooltipIconColor={netResult >= 0 ? "text-emerald-400" : "text-red-400"}
                 gradientColor={netResult >= 0 ? "from-white to-emerald-50" : "from-white to-red-50"}
                 borderColor={netResult >= 0 ? "bg-emerald-500" : "bg-red-500"}
+                breakdown={getNetResultBreakdown()}
               />
               <MetricCard
                 title="Margem Líquida"
@@ -174,6 +278,7 @@ export function FinancialMetrics({
                 gradientColor={netMargin >= 0 ? "from-white to-purple-50" : "from-white to-red-50"}
                 borderColor={netMargin >= 0 ? "bg-purple-500" : "bg-red-500"}
                 isPercentage={true}
+                breakdown={getNetMarginBreakdown()}
               />
             </div>
           </div>
@@ -187,6 +292,69 @@ export function FinancialMetrics({
               expenses: 0,
               netResult: 0,
               netMargin: 0,
+            }
+
+            // Filtrar dados para esta empresa específica para calcular breakdowns
+            const companyData = filteredData.filter((item) => item.CIA === company)
+
+            const getCompanyRevenueBreakdown = () => {
+              const revenueData = companyData.filter((item) => item.GRUPO === "RECEITA")
+              const subgroupTotals: Record<string, number> = {}
+
+              revenueData.forEach((item) => {
+                const subgroup = item.SUBGRUPO || "Outros"
+                subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + Number(item.VALOR)
+              })
+
+              const sortedSubgroups = Object.entries(subgroupTotals)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+
+              return sortedSubgroups.map(([label, value]) => ({ label, value }))
+            }
+
+            const getCompanyDeductionsBreakdown = () => {
+              const deductionsData = companyData.filter((item) => item.GRUPO === "DEDUCOES DE VENDAS")
+              const subgroupTotals: Record<string, number> = {}
+
+              deductionsData.forEach((item) => {
+                const subgroup = item.SUBGRUPO || "Outros"
+                subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + Math.abs(Number(item.VALOR))
+              })
+
+              const sortedSubgroups = Object.entries(subgroupTotals)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+
+              return sortedSubgroups.map(([label, value]) => ({ label, value }))
+            }
+
+            const getCompanyExpensesBreakdown = () => {
+              const expensesData = companyData.filter((item) => item.GRUPO === "DESPESA")
+              const subgroupTotals: Record<string, number> = {}
+
+              expensesData.forEach((item) => {
+                const subgroup = item.SUBGRUPO || "Outros"
+                const date = new Date(item.PERÍODO)
+                const isDecember = date.getUTCMonth() === 11
+                const isPersonnelExpense = item.SUBGRUPO && item.SUBGRUPO.toUpperCase() === "DESPESA COM PESSOAL"
+
+                let valueToAdd = 0
+                if (isDecember && isPersonnelExpense) {
+                  const valorAtual = Number(item.VALOR)
+                  valueToAdd = valorAtual < 0 ? Math.abs(valorAtual) : valorAtual
+                } else {
+                  valueToAdd = Math.abs(Number(item.VALOR))
+                }
+
+                subgroupTotals[subgroup] = (subgroupTotals[subgroup] || 0) + valueToAdd
+              })
+
+              const sortedSubgroups = Object.entries(subgroupTotals)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+
+              return sortedSubgroups.map(([label, value]) => ({ label, value }))
             }
 
             return (
@@ -204,6 +372,7 @@ export function FinancialMetrics({
                     tooltipIconColor="text-blue-400"
                     gradientColor="from-white to-blue-50"
                     borderColor="bg-blue-500"
+                    breakdown={getCompanyRevenueBreakdown()}
                   />
                   <MetricCard
                     title="Deduções"
@@ -216,6 +385,7 @@ export function FinancialMetrics({
                     tooltipIconColor="text-amber-400"
                     gradientColor="from-white to-amber-50"
                     borderColor="bg-amber-500"
+                    breakdown={getCompanyDeductionsBreakdown()}
                   />
                   <MetricCard
                     title="Receita Líquida"
@@ -228,6 +398,10 @@ export function FinancialMetrics({
                     tooltipIconColor="text-indigo-400"
                     gradientColor="from-white to-indigo-50"
                     borderColor="bg-indigo-500"
+                    breakdown={[
+                      { label: "Receita Bruta", value: companyMetric.grossRevenue },
+                      { label: "Deduções", value: companyMetric.deductions, isSubtraction: true },
+                    ]}
                   />
                   <MetricCard
                     title="Despesas"
@@ -240,6 +414,7 @@ export function FinancialMetrics({
                     tooltipIconColor="text-red-400"
                     gradientColor="from-white to-red-50"
                     borderColor="bg-red-500"
+                    breakdown={getCompanyExpensesBreakdown()}
                   />
                   <MetricCard
                     title="Resultado Líquido"
@@ -258,6 +433,10 @@ export function FinancialMetrics({
                     tooltipIconColor={companyMetric.netResult >= 0 ? "text-emerald-400" : "text-red-400"}
                     gradientColor={companyMetric.netResult >= 0 ? "from-white to-emerald-50" : "from-white to-red-50"}
                     borderColor={companyMetric.netResult >= 0 ? "bg-emerald-500" : "bg-red-500"}
+                    breakdown={[
+                      { label: "Receita Líquida", value: companyMetric.netRevenue },
+                      { label: "Despesas", value: Math.abs(companyMetric.expenses), isSubtraction: true },
+                    ]}
                   />
                   <MetricCard
                     title="Margem Líquida"
@@ -277,6 +456,16 @@ export function FinancialMetrics({
                     gradientColor={companyMetric.netMargin >= 0 ? "from-white to-purple-50" : "from-white to-red-50"}
                     borderColor={companyMetric.netMargin >= 0 ? "bg-purple-500" : "bg-red-500"}
                     isPercentage={true}
+                    breakdown={[
+                      {
+                        label: `Resultado: ${formatCurrency(companyMetric.netResult)}`,
+                        value: companyMetric.netResult,
+                      },
+                      {
+                        label: `÷ Rec. Líquida: ${formatCurrency(Math.abs(companyMetric.netRevenue))}`,
+                        value: Math.abs(companyMetric.netRevenue),
+                      },
+                    ]}
                   />
                 </div>
               </div>
@@ -297,6 +486,7 @@ export function FinancialMetrics({
             tooltipIconColor="text-blue-400"
             gradientColor="from-white to-blue-50"
             borderColor="bg-blue-500"
+            breakdown={getRevenueBreakdown()}
           />
           <MetricCard
             title="Deduções"
@@ -309,6 +499,7 @@ export function FinancialMetrics({
             tooltipIconColor="text-amber-400"
             gradientColor="from-white to-amber-50"
             borderColor="bg-amber-500"
+            breakdown={getDeductionsBreakdown()}
           />
           <MetricCard
             title="Receita Líquida"
@@ -321,6 +512,7 @@ export function FinancialMetrics({
             tooltipIconColor="text-indigo-400"
             gradientColor="from-white to-indigo-50"
             borderColor="bg-indigo-500"
+            breakdown={getNetRevenueBreakdown()}
           />
           <MetricCard
             title="Despesas"
@@ -333,6 +525,7 @@ export function FinancialMetrics({
             tooltipIconColor="text-red-400"
             gradientColor="from-white to-red-50"
             borderColor="bg-red-500"
+            breakdown={getExpensesBreakdown()}
           />
           <MetricCard
             title="Resultado Líquido"
@@ -351,6 +544,7 @@ export function FinancialMetrics({
             tooltipIconColor={netResult >= 0 ? "text-emerald-400" : "text-red-400"}
             gradientColor={netResult >= 0 ? "from-white to-emerald-50" : "from-white to-red-50"}
             borderColor={netResult >= 0 ? "bg-emerald-500" : "bg-red-500"}
+            breakdown={getNetResultBreakdown()}
           />
           <MetricCard
             title="Margem Líquida"
@@ -370,6 +564,7 @@ export function FinancialMetrics({
             gradientColor={netMargin >= 0 ? "from-white to-purple-50" : "from-white to-red-50"}
             borderColor={netMargin >= 0 ? "bg-purple-500" : "bg-red-500"}
             isPercentage={true}
+            breakdown={getNetMarginBreakdown()}
           />
         </div>
       )}
@@ -390,6 +585,7 @@ interface MetricCardProps {
   gradientColor: string
   borderColor: string
   isPercentage?: boolean
+  breakdown?: Array<{ label: string; value: number; isSubtraction?: boolean }>
 }
 
 function MetricCard({
@@ -404,11 +600,14 @@ function MetricCard({
   gradientColor,
   borderColor,
   isPercentage = false,
+  breakdown = [],
 }: MetricCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value)
   }
 
@@ -447,8 +646,27 @@ function MetricCard({
           {isPercentage ? `${value.toFixed(2)}%` : formatCurrency(displayValue)}
           {isNegative && !isPercentage && " (negativo)"}
         </div>
+
+        {/* Breakdown dos valores */}
+        {breakdown.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="space-y-1">
+              {breakdown.map((item, index) => (
+                <div key={index} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-600 truncate mr-2 max-w-[60%]">{item.label}</span>
+                  <span className={`font-medium ${item.isSubtraction ? "text-red-600" : "text-slate-700"} text-right`}>
+                    {item.isSubtraction && item.value > 0 ? "-" : ""}
+                    {item.label.includes("÷") || item.label.includes("×") ? "" : formatCurrency(Math.abs(item.value))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="text-xs text-slate-500 mt-1 line-clamp-2">{description}</p>
       </CardContent>
     </Card>
   )
 }
+
